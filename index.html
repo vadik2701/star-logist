@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR Logist Routes</title>
+<style>
+:root{
+  --bg:#f3f4f6; --panel:#fff; --border:#d1d5db; --text:#111827; --muted:#6b7280;
+  --blue:#3b82f6; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --firm:#dcfce7;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.hidden{display:none!important}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{width:100%;max-width:420px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
+.brand{display:inline-block;background:#111827;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700;letter-spacing:.4px;margin-bottom:12px}
+.login-title{font-size:30px;font-weight:700;margin:0 0 8px}
+.login-sub{color:var(--muted);margin:0 0 16px}
+.login-input{width:100%;padding:14px 16px;border:1px solid #c7c7c7;border-radius:14px;font-size:18px}
+.login-btn{width:100%;margin-top:12px;border:none;border-radius:14px;padding:14px 20px;background:#111827;color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+.login-err{margin-top:10px;color:#b91c1c;font-weight:700;min-height:22px}
+
+.page{max-width:1400px;margin:0 auto;padding:16px}
+.topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+h1{margin:8px 0 6px;font-size:30px}
+.sub{color:var(--muted);margin-bottom:8px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:14px}
+.sidebar .panel{margin-bottom:14px}
+.main .panel{margin-bottom:14px}
+button,input,textarea,select{font:inherit}
+input,textarea,select{width:100%;padding:12px;border:1px solid #c7c7c7;border-radius:10px;background:#fff}
+textarea{min-height:140px;resize:vertical}
+button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.primary{background:#111827;color:#fff}
+.secondary{background:#6b7280;color:#fff}
+.blue{background:var(--blue);color:#fff}
+.green{background:var(--green);color:#fff}
+.yellow{background:var(--yellow);color:#111827}
+.danger{background:var(--red);color:#fff}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.notice{margin-top:10px;padding:12px 14px;border-radius:12px;font-weight:700}
+.notice.ok{background:#dcfce7;color:#166534}
+.notice.err{background:#fee2e2;color:#991b1b}
+.notice.warn{background:#fef3c7;color:#92400e}
+.tabs{display:flex;gap:10px;flex-wrap:wrap}
+.tab.active{outline:3px solid #cbd5e1}
+.route-list{display:grid;gap:8px;max-height:60vh;overflow:auto}
+.route-item{padding:12px;border:1px solid #d1d5db;border-radius:12px;background:#fff;cursor:pointer}
+.route-item.active{outline:3px solid #cbd5e1;background:#eef2ff}
+.route-title{font-weight:700}
+.route-meta{font-size:13px;color:var(--muted);margin-top:4px}
+.driver-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.small{font-size:13px;color:var(--muted)}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.empty{text-align:center;color:var(--muted);padding:24px;border:1px dashed #cbd5e1;border-radius:14px;background:#fff}
+table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed}
+td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;line-height:1.45}
+.left-col{width:130px;font-size:20px;vertical-align:middle}
+.shop{font-size:20px;font-weight:700}
+.raw{white-space:pre-wrap;font-size:18px;min-height:170px}
+.row-firm td{background:var(--firm)}
+.status-badge{display:inline-block;font-size:16px;padding:10px 14px;border-radius:12px;font-weight:700}
+.badge-loaded{background:#dbeafe;color:#1d4ed8}
+.badge-delivered{background:#dcfce7;color:#15803d}
+.badge-postponed{background:#fef3c7;color:#a16207}
+.status-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.status-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.driver-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.driver-card.firm{background:var(--firm);border-color:#86efac}
+.point{font-size:24px;font-weight:700;margin-bottom:8px}
+.firm-badge{display:inline-block;background:#16a34a;color:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:14px;margin-bottom:10px}
+.driver-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.logout{margin-left:auto}
+@media (max-width: 900px){
+  .layout{grid-template-columns:1fr}
+}
+@media (max-width: 640px){
+  .driver-actions{grid-template-columns:1fr}
+  .raw{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div id="loginScreen" class="login-wrap">
+  <div class="login-box">
+    <div class="brand">STAR Logist</div>
+    <div class="login-title">Вхід</div>
+    <p class="login-sub">Введи пароль для доступу.</p>
+    <input id="passwordInput" class="login-input" type="password" placeholder="Пароль" />
+    <button id="loginBtn" class="login-btn">Увійти</button>
+    <div id="loginErr" class="login-err"></div>
+  </div>
+</div>
+
+<div id="appScreen" class="hidden">
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <div class="brand">STAR Logist</div>
+        <h1>Маршрути</h1>
+        <div class="sub">7 водіїв, назви маршрутів, список усіх маршрутів і окремий режим водія.</div>
+      </div>
+      <div class="tabs">
+        <button class="tab primary active" id="dispatcherTab">Диспетчер</button>
+        <button class="tab secondary" id="driverTab">Водій</button>
+        <button class="danger logout" id="logoutBtn">Вийти</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="noticeBox"></div>
+      <div class="small">Firebase підключений. Пароль: 8888.</div>
+    </div>
+
+    <div id="dispatcherView">
+      <div class="layout">
+        <div class="sidebar">
+          <div class="panel">
+            <h3 style="margin-top:0">Новий маршрут</h3>
+            <div class="driver-grid">
+              <input id="routeNameInput" placeholder="Назва маршруту, напр. Львів 24.04" />
+              <input id="routeDateInput" placeholder="Дата" />
+              <select id="routeDriverSelect"></select>
+              <button class="primary" id="createRouteBtn">Створити маршрут</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top:0">Водії</h3>
+            <div id="driversEditor" class="driver-grid"></div>
+            <button class="secondary" id="saveDriversBtn" style="margin-top:10px">Зберегти водіїв</button>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top:0">Усі маршрути</h3>
+            <div id="routeList" class="route-list"></div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="panel">
+            <div class="meta-grid">
+              <div><b>Назва:</b> <span id="currentRouteName">—</span></div>
+              <div><b>Дата:</b> <span id="currentRouteDate">—</span></div>
+              <div><b>Водій:</b> <span id="currentRouteDriver">—</span></div>
+              <div><b>ID:</b> <span id="currentRouteId">—</span></div>
+            </div>
+            <div class="toolbar" style="margin-top:12px">
+              <button class="secondary" id="copyRouteIdBtn">Копіювати ID</button>
+              <button class="danger" id="deleteRouteBtn">Видалити маршрут</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top:0">Додати точку</h3>
+            <textarea id="newPointText" placeholder="Встав текст з Viber"></textarea>
+            <div class="toolbar" style="margin-top:12px">
+              <button class="primary" id="addPointBtn">Додати точку</button>
+            </div>
+          </div>
+
+          <div id="dispatcherRouteContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="driverView" class="hidden">
+      <div class="layout">
+        <div class="sidebar">
+          <div class="panel">
+            <h3 style="margin-top:0">Вибір водія</h3>
+            <select id="driverModeSelect"></select>
+            <div class="small" style="margin-top:8px">Водій бачить тільки свої маршрути.</div>
+          </div>
+          <div class="panel">
+            <h3 style="margin-top:0">Маршрути водія</h3>
+            <div id="driverRouteList" class="route-list"></div>
+          </div>
+        </div>
+        <div class="main">
+          <div class="panel">
+            <div class="meta-grid">
+              <div><b>Назва:</b> <span id="driverRouteName">—</span></div>
+              <div><b>Дата:</b> <span id="driverRouteDate">—</span></div>
+              <div><b>Водій:</b> <span id="driverRouteDriver">—</span></div>
+            </div>
+          </div>
+          <div id="driverRouteContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const PASSWORD = "8888";
+const AUTH_KEY = "star_logist_auth_ok";
+const firebaseConfig = {
+  "apiKey": "AIzaSyDT8lXwV-DhkwuF9Vq8ZrOipgJ_TtabePc",
+  "authDomain": "star-logist.firebaseapp.com",
+  "databaseURL": "https://star-logist-default-rtdb.europe-west1.firebasedatabase.app",
+  "projectId": "star-logist",
+  "storageBucket": "star-logist.firebasestorage.app",
+  "messagingSenderId": "564920074561",
+  "appId": "1:564920074561:web:1b203b4f736d1a4d4ba1c0",
+  "measurementId": "G-W3K12RP3ND"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const defaultDrivers = ["Водій 1","Водій 2","Водій 3","Водій 4","Водій 5","Водій 6","Водій 7"];
+let drivers = [...defaultDrivers];
+let routes = {};
+let currentRouteId = "";
+let currentDriverMode = "";
+let selectedDriverRouteId = "";
+
+const loginScreen = document.getElementById("loginScreen");
+const appScreen = document.getElementById("appScreen");
+const passwordInput = document.getElementById("passwordInput");
+const loginBtn = document.getElementById("loginBtn");
+const loginErr = document.getElementById("loginErr");
+const logoutBtn = document.getElementById("logoutBtn");
+const noticeBox = document.getElementById("noticeBox");
+
+function tryLogin(){
+  if(passwordInput.value === PASSWORD){
+    localStorage.setItem(AUTH_KEY,"1");
+    loginScreen.classList.add("hidden");
+    appScreen.classList.remove("hidden");
+  } else {
+    loginErr.textContent = "Неправильний пароль";
+  }
+}
+if(localStorage.getItem(AUTH_KEY) === "1"){
+  loginScreen.classList.add("hidden");
+  appScreen.classList.remove("hidden");
+}
+loginBtn.addEventListener("click", tryLogin);
+passwordInput.addEventListener("keydown", e=>{ if(e.key==="Enter") tryLogin(); });
+logoutBtn.addEventListener("click", ()=>{ localStorage.removeItem(AUTH_KEY); location.reload(); });
+
+function showNotice(text, kind="ok"){
+  noticeBox.innerHTML = `<div class="notice ${kind}">${text}</div>`;
+  clearTimeout(window.__noticeTimer);
+  window.__noticeTimer = setTimeout(()=>noticeBox.innerHTML="",3500);
+}
+
+function setMode(mode){
+  document.getElementById("dispatcherView").classList.toggle("hidden", mode !== "dispatcher");
+  document.getElementById("driverView").classList.toggle("hidden", mode !== "driver");
+  document.getElementById("dispatcherTab").className = mode === "dispatcher" ? "tab primary active" : "tab secondary";
+  document.getElementById("driverTab").className = mode === "driver" ? "tab primary active" : "tab secondary";
+}
+
+document.getElementById("dispatcherTab").addEventListener("click", ()=>setMode("dispatcher"));
+document.getElementById("driverTab").addEventListener("click", ()=>setMode("driver"));
+
+function badgeClass(status){
+  if(status === "Доставлено") return "badge-delivered";
+  if(status === "Перенесено") return "badge-postponed";
+  return "badge-loaded";
+}
+
+function routeArray(){
+  return Object.entries(routes).map(([id, route]) => ({ id, ...route })).sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+}
+
+function renderDriversEditor(){
+  const wrap = document.getElementById("driversEditor");
+  wrap.innerHTML = "";
+  drivers.forEach((name, i)=>{
+    const input = document.createElement("input");
+    input.value = name;
+    input.placeholder = `Водій ${i+1}`;
+    input.dataset.index = i;
+    wrap.appendChild(input);
+  });
+}
+
+function renderDriverSelects(){
+  const routeSel = document.getElementById("routeDriverSelect");
+  const driverSel = document.getElementById("driverModeSelect");
+  routeSel.innerHTML = "";
+  driverSel.innerHTML = '<option value="">Вибери водія</option>';
+  drivers.forEach((name, i)=>{
+    const val = String(i);
+    routeSel.innerHTML += `<option value="${val}">${name}</option>`;
+    driverSel.innerHTML += `<option value="${val}">${name}</option>`;
+  });
+  if(currentDriverMode !== "") driverSel.value = currentDriverMode;
+}
+
+async function saveDrivers(){
+  const inputs = [...document.querySelectorAll("#driversEditor input")];
+  drivers = inputs.map((i, idx)=> i.value.trim() || `Водій ${idx+1}`);
+  await set(ref(db, "settings/drivers"), drivers);
+  renderDriverSelects();
+  renderRouteList();
+  renderDriverRouteList();
+  renderCurrentRoute();
+  showNotice("Водіїв збережено","ok");
+}
+
+document.getElementById("saveDriversBtn").addEventListener("click", saveDrivers);
+
+function listenDrivers(){
+  onValue(ref(db, "settings/drivers"), snap => {
+    const value = snap.val();
+    drivers = Array.isArray(value) && value.length ? value : [...defaultDrivers];
+    renderDriversEditor();
+    renderDriverSelects();
+    renderRouteList();
+    renderDriverRouteList();
+    renderCurrentRoute();
+  });
+}
+
+function listenRoutes(){
+  onValue(ref(db, "routes"), snap => {
+    routes = snap.val() || {};
+    if(currentRouteId && !routes[currentRouteId]) currentRouteId = "";
+    if(selectedDriverRouteId && !routes[selectedDriverRouteId]) selectedDriverRouteId = "";
+    renderRouteList();
+    renderCurrentRoute();
+    renderDriverRouteList();
+    renderDriverCurrentRoute();
+  });
+}
+
+function driverNameById(driverId){
+  return drivers[Number(driverId)] || "—";
+}
+
+async function createRoute(){
+  const name = document.getElementById("routeNameInput").value.trim();
+  const date = document.getElementById("routeDateInput").value.trim();
+  const driverId = document.getElementById("routeDriverSelect").value;
+  if(!name) return showNotice("Введи назву маршруту","warn");
+  if(driverId === "") return showNotice("Вибери водія","warn");
+  const id = Math.random().toString(36).slice(2,10).toUpperCase();
+  const route = {
+    name,
+    date: date || "",
+    driverId,
+    createdAt: Date.now(),
+    points: []
+  };
+  await set(ref(db, "routes/" + id), route);
+  currentRouteId = id;
+  document.getElementById("routeNameInput").value = "";
+  document.getElementById("routeDateInput").value = "";
+  showNotice("Маршрут створено","ok");
+}
+
+document.getElementById("createRouteBtn").addEventListener("click", createRoute);
+
+async function deleteRoute(){
+  if(!currentRouteId) return showNotice("Немає відкритого маршруту","warn");
+  if(!confirm("Видалити маршрут?")) return;
+  await remove(ref(db, "routes/" + currentRouteId));
+  currentRouteId = "";
+}
+
+document.getElementById("deleteRouteBtn").addEventListener("click", deleteRoute);
+
+async function copyRouteId(){
+  if(!currentRouteId) return showNotice("Немає відкритого маршруту","warn");
+  await navigator.clipboard.writeText(currentRouteId);
+  showNotice("ID маршруту скопійовано","ok");
+}
+document.getElementById("copyRouteIdBtn").addEventListener("click", copyRouteId);
+
+async function addPoint(){
+  if(!currentRouteId) return showNotice("Спочатку відкрий або створи маршрут","warn");
+  const text = document.getElementById("newPointText").value.trim();
+  if(!text) return showNotice("Встав текст точки","warn");
+  const route = routes[currentRouteId];
+  const points = route.points || [];
+  points.push({
+    id: Date.now(),
+    pointLabel: `${points.length + 1}-точка`,
+    shop: "Магазин",
+    rawText: text,
+    status: "Загружено",
+    fromFirm: false
+  });
+  await update(ref(db, "routes/" + currentRouteId), { points });
+  document.getElementById("newPointText").value = "";
+}
+
+document.getElementById("addPointBtn").addEventListener("click", addPoint);
+
+async function updatePoint(routeId, pointId, changes){
+  const route = routes[routeId];
+  if(!route) return;
+  const points = (route.points || []).map(p => p.id === pointId ? {...p, ...changes} : p)
+    .map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
+  await update(ref(db, "routes/" + routeId), { points });
+}
+
+async function deletePoint(routeId, pointId){
+  const route = routes[routeId];
+  if(!route) return;
+  const points = (route.points || []).filter(p => p.id !== pointId)
+    .map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
+  await update(ref(db, "routes/" + routeId), { points });
+}
+
+function renderRouteList(){
+  const wrap = document.getElementById("routeList");
+  const arr = routeArray();
+  if(!arr.length) {
+    wrap.innerHTML = '<div class="empty">Ще немає маршрутів</div>';
+    return;
+  }
+  wrap.innerHTML = "";
+  arr.forEach(route => {
+    const div = document.createElement("div");
+    div.className = "route-item" + (route.id === currentRouteId ? " active" : "");
+    div.innerHTML = `<div class="route-title">${route.name || "Без назви"}</div>
+      <div class="route-meta">${route.date || "—"} · ${driverNameById(route.driverId)} · ID: ${route.id}</div>`;
+    div.onclick = ()=>{ currentRouteId = route.id; renderRouteList(); renderCurrentRoute(); };
+    wrap.appendChild(div);
+  });
+}
+
+function renderCurrentRoute(){
+  const route = routes[currentRouteId];
+  document.getElementById("currentRouteId").textContent = currentRouteId || "—";
+  document.getElementById("currentRouteName").textContent = route?.name || "—";
+  document.getElementById("currentRouteDate").textContent = route?.date || "—";
+  document.getElementById("currentRouteDriver").textContent = route ? driverNameById(route.driverId) : "—";
+
+  const wrap = document.getElementById("dispatcherRouteContent");
+  if(!route) {
+    wrap.innerHTML = '<div class="empty">Вибери маршрут зліва або створи новий.</div>';
+    return;
+  }
+  const points = route.points || [];
+  if(!points.length) {
+    wrap.innerHTML = '<div class="empty">У маршруті ще немає точок.</div>';
+    return;
+  }
+  const table = document.createElement("table");
+  table.innerHTML = '<colgroup><col style="width:130px"><col></colgroup>';
+  const tbody = document.createElement("tbody");
+
+  points.forEach(point => {
+    const tr1 = document.createElement("tr");
+    if(point.fromFirm) tr1.className = "row-firm";
+    const leftTd = document.createElement("td");
+    leftTd.className = "left-col";
+    leftTd.rowSpan = 3;
+    leftTd.textContent = point.pointLabel;
+    const shopTd = document.createElement("td");
+    shopTd.className = "shop";
+    shopTd.textContent = point.shop || "Магазин";
+    tr1.append(leftTd, shopTd);
+
+    const tr2 = document.createElement("tr");
+    if(point.fromFirm) tr2.className = "row-firm";
+    const rawTd = document.createElement("td");
+    const rawDiv = document.createElement("div");
+    rawDiv.className = "raw";
+    rawDiv.textContent = point.rawText || "";
+    rawTd.appendChild(rawDiv);
+    tr2.appendChild(rawTd);
+
+    const tr3 = document.createElement("tr");
+    if(point.fromFirm) tr3.className = "row-firm";
+    const statusTd = document.createElement("td");
+    const row = document.createElement("div");
+    row.className = "status-row";
+    const badge = document.createElement("div");
+    badge.className = `status-badge ${badgeClass(point.status)}`;
+    badge.textContent = `Статус: ${point.status}`;
+    const btnWrap = document.createElement("div");
+    btnWrap.className = "status-buttons";
+
+    function makeBtn(text, cls, cb){
+      const b = document.createElement("button");
+      b.className = cls;
+      b.textContent = text;
+      b.onclick = cb;
+      return b;
+    }
+
+    btnWrap.appendChild(makeBtn("Загружено","blue",()=>updatePoint(currentRouteId, point.id, {status:"Загружено"})));
+    btnWrap.appendChild(makeBtn("Доставлено","green",()=>updatePoint(currentRouteId, point.id, {status:"Доставлено"})));
+    btnWrap.appendChild(makeBtn("Перенесено","yellow",()=>updatePoint(currentRouteId, point.id, {status:"Перенесено"})));
+    btnWrap.appendChild(makeBtn(point.fromFirm ? "Фірма ✔":"Фірма", point.fromFirm ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {fromFirm: !point.fromFirm})));
+    btnWrap.appendChild(makeBtn("Магазин","secondary",()=>{
+      const next = prompt("Назва магазину", point.shop || "");
+      if(next !== null && next.trim()) updatePoint(currentRouteId, point.id, {shop: next.trim()});
+    }));
+    btnWrap.appendChild(makeBtn("Редагувати","secondary",()=>{
+      const next = prompt("Редагувати текст точки", point.rawText || "");
+      if(next !== null && next.trim()) updatePoint(currentRouteId, point.id, {rawText: next.trim()});
+    }));
+    btnWrap.appendChild(makeBtn("Видалити","danger",()=>deletePoint(currentRouteId, point.id)));
+
+    row.append(badge, btnWrap);
+    statusTd.appendChild(row);
+    tr3.appendChild(statusTd);
+    tbody.append(tr1,tr2,tr3);
+  });
+
+  table.appendChild(tbody);
+  wrap.innerHTML = "";
+  wrap.appendChild(table);
+}
+
+document.getElementById("driverModeSelect").addEventListener("change", e=>{
+  currentDriverMode = e.target.value;
+  selectedDriverRouteId = "";
+  renderDriverRouteList();
+  renderDriverCurrentRoute();
+});
+
+function renderDriverRouteList(){
+  const wrap = document.getElementById("driverRouteList");
+  if(currentDriverMode === "") {
+    wrap.innerHTML = '<div class="empty">Вибери водія</div>';
+    return;
+  }
+  const arr = routeArray().filter(r => String(r.driverId) === String(currentDriverMode));
+  if(!arr.length) {
+    wrap.innerHTML = '<div class="empty">У цього водія ще немає маршрутів</div>';
+    return;
+  }
+  if(!selectedDriverRouteId) selectedDriverRouteId = arr[0].id;
+  wrap.innerHTML = "";
+  arr.forEach(route => {
+    const div = document.createElement("div");
+    div.className = "route-item" + (route.id === selectedDriverRouteId ? " active" : "");
+    div.innerHTML = `<div class="route-title">${route.name || "Без назви"}</div>
+      <div class="route-meta">${route.date || "—"}</div>`;
+    div.onclick = ()=>{ selectedDriverRouteId = route.id; renderDriverRouteList(); renderDriverCurrentRoute(); };
+    wrap.appendChild(div);
+  });
+}
+
+function renderDriverCurrentRoute(){
+  const route = routes[selectedDriverRouteId];
+  document.getElementById("driverRouteName").textContent = route?.name || "—";
+  document.getElementById("driverRouteDate").textContent = route?.date || "—";
+  document.getElementById("driverRouteDriver").textContent = route ? driverNameById(route.driverId) : "—";
+  const wrap = document.getElementById("driverRouteContent");
+  if(!route) {
+    wrap.innerHTML = '<div class="empty">Вибери маршрут водія зліва.</div>';
+    return;
+  }
+  const points = route.points || [];
+  if(!points.length) {
+    wrap.innerHTML = '<div class="empty">У цьому маршруті ще немає точок.</div>';
+    return;
+  }
+  wrap.innerHTML = "";
+  points.forEach(point => {
+    const card = document.createElement("div");
+    card.className = "driver-card" + (point.fromFirm ? " firm" : "");
+    card.innerHTML = `
+      <div class="point">${point.pointLabel}</div>
+      <div class="shop">${point.shop || "Магазин"}</div>
+      ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
+      <div class="raw">${(point.rawText || "").replace(/\n/g, "<br>")}</div>
+      <div class="status-badge ${badgeClass(point.status)}">Статус: ${point.status}</div>
+      <div class="driver-actions" style="margin-top:14px">
+        <button class="green" data-action="delivered" data-point="${point.id}">Доставлено</button>
+        <button class="yellow" data-action="postponed" data-point="${point.id}">Перенесено</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+  wrap.querySelectorAll("[data-action]").forEach(btn => {
+    btn.onclick = ()=>{
+      const pointId = Number(btn.getAttribute("data-point"));
+      const action = btn.getAttribute("data-action");
+      if(action === "delivered") updatePoint(selectedDriverRouteId, pointId, {status:"Доставлено"});
+      if(action === "postponed") updatePoint(selectedDriverRouteId, pointId, {status:"Перенесено"});
+    };
+  });
+}
+
+listenDrivers();
+listenRoutes();
+renderDriversEditor();
+renderDriverSelects();
+renderRouteList();
+renderCurrentRoute();
+renderDriverRouteList();
+renderDriverCurrentRoute();
+</script>
+</body>
+</html>
