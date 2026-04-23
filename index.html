@@ -80,6 +80,52 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   .driver-actions{grid-template-columns:1fr}
   .raw{font-size:16px}
 }
+
+.print-route{display:none}
+@media print{
+  @page{margin:12mm}
+  body{background:#fff !important}
+  body *{visibility:hidden !important}
+  #printRouteContent, #printRouteContent *{visibility:visible !important}
+  #printRouteContent{
+    display:block !important;
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    padding:0;
+    margin:0;
+    background:#fff;
+  }
+  #printRouteContent .print-head{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin:0 0 12px 0;
+    font-size:18px;
+    font-weight:700;
+  }
+  #printRouteContent .driver-card{
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+    margin-bottom:12px !important;
+    box-shadow:none !important;
+    border:1px solid #b7c0c9 !important;
+  }
+  #printRouteContent .driver-card.firm{
+    background:#dcfce7 !important;
+    border-color:#86efac !important;
+  }
+  #printRouteContent .firm-badge{
+    background:#16a34a !important;
+    color:#fff !important;
+  }
+  #printRouteContent, #printRouteContent *{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -149,6 +195,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             </div>
             <div class="toolbar" style="margin-top:12px">
               <button class="secondary" id="copyRouteIdBtn">Копіювати ID</button>
+              <button class="blue" id="printRouteBtn">Друк маршруту</button>
               <button class="danger" id="deleteRouteBtn">Видалити маршрут</button>
             </div>
           </div>
@@ -193,6 +240,8 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
     </div>
   </div>
 </div>
+
+<div id="printRouteContent" class="print-route"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -396,6 +445,83 @@ async function addPoint(){
 
 document.getElementById("addPointBtn").addEventListener("click", addPoint);
 
+async function insertPointAfter(routeId, afterPointId, text){
+  const route = routes[routeId];
+  if(!route) return;
+  const sourceText = (text || "").trim();
+  if(!sourceText) return showNotice("Встав текст точки, яку треба вставити між доставками","warn");
+  const oldPoints = route.points || [];
+  const insertIndex = oldPoints.findIndex(p => p.id === afterPointId);
+  if(insertIndex === -1) return showNotice("Не вдалося знайти точку для вставки","err");
+  const newPoint = {
+    id: Date.now(),
+    pointLabel: "",
+    shop: "Магазин",
+    rawText: sourceText,
+    status: "Загружено",
+    fromFirm: false
+  };
+  const points = [...oldPoints];
+  points.splice(insertIndex + 1, 0, newPoint);
+  const normalized = points.map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
+  await update(ref(db, "routes/" + routeId), { points: normalized });
+  document.getElementById("newPointText").value = "";
+  showNotice("Точку вставлено в маршрут","ok");
+}
+
+function escapeHtml(s){
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function buildDriverCardsHtml(route){
+  const points = route?.points || [];
+  if(!points.length) return '<div class="empty">У цьому маршруті ще немає точок.</div>';
+  return points.map(point => `
+    <div class="driver-card${point.fromFirm ? " firm" : ""}">
+      <div class="point">${point.pointLabel}</div>
+      <div class="shop">${escapeHtml(point.shop || "Магазин")}</div>
+      ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
+      <div class="raw">${escapeHtml(point.rawText || "").replace(/\n/g, "<br>")}</div>
+      <div class="status-badge ${badgeClass(point.status)}">Статус: ${escapeHtml(point.status)}</div>
+      <div class="driver-actions" style="margin-top:14px">
+        <button class="green">Доставлено</button>
+        <button class="yellow">Перенесено</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderPrintRoute(routeId){
+  const route = routes[routeId];
+  const wrap = document.getElementById("printRouteContent");
+  if(!route){
+    wrap.innerHTML = "";
+    return false;
+  }
+  wrap.innerHTML = `
+    <div class="print-head">
+      <div><b>Назва:</b> ${escapeHtml(route.name || "—")}</div>
+      <div><b>Дата:</b> ${escapeHtml(route.date || "—")}</div>
+      <div><b>Водій:</b> ${escapeHtml(driverNameById(route.driverId))}</div>
+    </div>
+    ${buildDriverCardsHtml(route)}
+  `;
+  return true;
+}
+
+function printCurrentRoute(){
+  if(!currentRouteId) return showNotice("Спочатку відкрий маршрут","warn");
+  if(!renderPrintRoute(currentRouteId)) return showNotice("Немає даних для друку","warn");
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => window.print());
+  });
+}
+document.getElementById("printRouteBtn").addEventListener("click", printCurrentRoute);
+
+
 async function updatePoint(routeId, pointId, changes){
   const route = routes[routeId];
   if(!route) return;
@@ -494,6 +620,7 @@ function renderCurrentRoute(){
     btnWrap.appendChild(makeBtn("Загружено","blue",()=>updatePoint(currentRouteId, point.id, {status:"Загружено"})));
     btnWrap.appendChild(makeBtn("Доставлено","green",()=>updatePoint(currentRouteId, point.id, {status:"Доставлено"})));
     btnWrap.appendChild(makeBtn("Перенесено","yellow",()=>updatePoint(currentRouteId, point.id, {status:"Перенесено"})));
+    btnWrap.appendChild(makeBtn("Вставити після","blue",()=>insertPointAfter(currentRouteId, point.id, document.getElementById("newPointText").value)));
     btnWrap.appendChild(makeBtn(point.fromFirm ? "Фірма ✔":"Фірма", point.fromFirm ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {fromFirm: !point.fromFirm})));
     btnWrap.appendChild(makeBtn("Магазин","secondary",()=>{
       const next = prompt("Назва магазину", point.shop || "");
