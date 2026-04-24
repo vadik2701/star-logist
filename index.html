@@ -126,6 +126,57 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   }
 }
 
+
+/* COMPACT PRINT UPDATE */
+@media print{
+  #printRouteContent .print-head{
+    font-size:14px !important;
+    margin-bottom:6px !important;
+  }
+  #printRouteContent .driver-card{
+    padding:8px 10px !important;
+    margin-bottom:6px !important;
+    border-radius:10px !important;
+    min-height:0 !important;
+  }
+  #printRouteContent .point{
+    font-size:18px !important;
+    margin-bottom:4px !important;
+  }
+  #printRouteContent .shop{
+    font-size:16px !important;
+    margin-bottom:2px !important;
+  }
+  #printRouteContent .firm-badge{
+    font-size:11px !important;
+    padding:4px 8px !important;
+    margin-bottom:4px !important;
+  }
+  #printRouteContent .raw{
+    font-size:14px !important;
+    line-height:1.2 !important;
+    min-height:0 !important;
+    margin-top:4px !important;
+  }
+  #printRouteContent .status-badge{
+    font-size:12px !important;
+    padding:5px 8px !important;
+    margin-top:6px !important;
+  }
+  #printRouteContent .driver-actions{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:6px !important;
+    margin-top:6px !important;
+  }
+  #printRouteContent button{
+    font-size:12px !important;
+    padding:7px 10px !important;
+    border-radius:9px !important;
+    box-shadow:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -195,6 +246,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             </div>
             <div class="toolbar" style="margin-top:12px">
               <button class="secondary" id="copyRouteIdBtn">Копіювати ID</button>
+              <button class="blue" id="changeRouteDriverBtn">Змінити водія</button>
               <button class="blue" id="printRouteBtn">Друк маршруту</button>
               <button class="danger" id="deleteRouteBtn">Видалити маршрут</button>
             </div>
@@ -424,6 +476,27 @@ async function copyRouteId(){
   showNotice("ID маршруту скопійовано","ok");
 }
 document.getElementById("copyRouteIdBtn").addEventListener("click", copyRouteId);
+
+async function changeRouteDriver(){
+  if(!currentRouteId) return showNotice("Спочатку відкрий маршрут","warn");
+  const route = routes[currentRouteId];
+  if(!route) return showNotice("Маршрут не знайдено","warn");
+
+  const list = drivers.map((name, i)=>`${i+1}. ${name}`).join("\n");
+  const current = Number(route.driverId) + 1;
+  const answer = prompt(`Вибери нового водія номером:\n\n${list}`, String(current));
+
+  if(answer === null) return;
+  const num = Number(answer.trim());
+  if(!Number.isInteger(num) || num < 1 || num > drivers.length){
+    return showNotice("Введи номер водія від 1 до " + drivers.length, "warn");
+  }
+
+  await update(ref(db, "routes/" + currentRouteId), { driverId: String(num - 1) });
+  showNotice("Водія маршруту змінено","ok");
+}
+document.getElementById("changeRouteDriverBtn").addEventListener("click", changeRouteDriver);
+
 
 async function addPoint(){
   if(!currentRouteId) return showNotice("Спочатку відкрий або створи маршрут","warn");
