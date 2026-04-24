@@ -783,7 +783,17 @@ function renderDriverCurrentRoute(){
       const pointId = Number(btn.getAttribute("data-point"));
       const action = btn.getAttribute("data-action");
       if(action === "delivered") updatePoint(selectedDriverRouteId, pointId, {status:"Доставлено"});
-      if(action === "postponed") updatePoint(selectedDriverRouteId, pointId, {status:"Перенесено"});
+      if(action === "postponed"){
+  const note = prompt("Причина переносу / примітка:", "");
+  if(note !== null){
+    const route = routes[selectedDriverRouteId];
+    const point = route.points.find(p=>p.id===pointId);
+    updatePoint(selectedDriverRouteId, pointId, {
+      status:"Перенесено",
+      rawText: (point?.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + (note || "")
+    });
+  }
+}
     };
   });
 }
