@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#111827" />
+<link rel="icon" type="image/svg+xml" href="star-icon-v2.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="star-icon-v2-192.png" />
+<link rel="apple-touch-icon" href="star-icon-v2-apple.png" />
+<link rel="manifest" href="star-logist-driver.webmanifest" />
+<title>STAR Logist — Водій</title>
+<style>
+  :root{--bg:#f3f4f6;--panel:#ffffff;--border:#d1d5db;--text:#111827;--muted:#6b7280;--green:#22c55e;--yellow:#eab308;--blue:#3b82f6;--firm:#dcfce7}
+  *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .page{max-width:860px;margin:0 auto;padding:16px}
+  .brand{display:inline-block;background:#111827;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700;letter-spacing:.4px;margin-bottom:10px}
+  h1{margin:8px 0 6px;font-size:30px}.sub{color:var(--muted);margin-bottom:16px;font-size:16px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  .meta{display:grid;grid-template-columns:1fr;gap:8px;font-size:18px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  .card.firm{background:var(--firm);border-color:#86efac}
+  .point{font-size:26px;font-weight:700;margin-bottom:8px}.shop{font-size:22px;font-weight:700;margin-bottom:10px}
+  .firm-badge{display:inline-block;background:#16a34a;color:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:14px;margin-bottom:10px}
+  .raw{white-space:pre-wrap;font-size:24px;line-height:1.4;margin-bottom:14px}
+  .status{display:inline-block;padding:12px 16px;border-radius:14px;font-size:20px;font-weight:700;margin-bottom:14px}
+  .status.loaded{background:#dbeafe;color:#1d4ed8}.status.delivered{background:#dcfce7;color:#15803d}.status.postponed{background:#fef3c7;color:#a16207}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  button{border:none;border-radius:18px;min-height:64px;font-size:22px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .btn-delivered{background:var(--green);color:#fff}.btn-postponed{background:var(--yellow);color:#111827}.btn-import{background:#111827;color:#fff}.btn-export{background:#3b82f6;color:#fff}
+  .empty{text-align:center;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px;font-size:18px}
+  .small-note{color:var(--muted);font-size:14px;margin-top:6px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  @media (max-width: 640px){ .page{padding:12px} h1{font-size:26px} .raw{font-size:21px} .point{font-size:24px} .shop{font-size:20px} .actions{grid-template-columns:1fr} button{min-height:70px;font-size:24px} }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="brand">STAR Logist</div>
+  <h1>Режим водія</h1>
+  <div class="sub">Імпортуй маршрутний файл, працюй з кнопками і потім експортуй оновлення назад диспетчеру.</div>
+
+  <div class="panel">
+    <div class="toolbar">
+      <button class="btn-import" id="importBtn">Імпорт маршруту</button>
+      <button class="btn-export" id="exportBtn">Експорт назад</button>
+      <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+    </div>
+    <div class="meta">
+      <div><b>Дата:</b> <span id="dateOut"></span></div>
+      <div><b>Водій:</b> <span id="driverOut"></span></div>
+    </div>
+    <div class="small-note">Після змін натисни “Експорт назад” і передай файл диспетчеру.</div>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<script>
+const STORAGE_KEY = "star_logist_driver_v3";
+const defaultState = {routeDate:"2026-04-20", driverName:"Водій 1", points:[]};
+let state = structuredClone(defaultState);
+
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function loadState(){ try{ const saved=localStorage.getItem(STORAGE_KEY); if(saved) state=JSON.parse(saved);}catch(e){console.error(e);} }
+function badgeClass(status){ if(status==="Доставлено") return "delivered"; if(status==="Перенесено") return "postponed"; return "loaded"; }
+function setStatus(id, status){ state.points=state.points.map(p=>p.id===id?{...p,status}:p); saveState(); render(); }
+function importFile(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.points)){ alert("Невірний файл маршруту"); return; }
+      state.routeDate = parsed.routeDate || state.routeDate;
+      state.driverName = parsed.driverName || state.driverName;
+      state.points = parsed.points;
+      saveState();
+      render();
+      alert("Маршрут імпортовано");
+    }catch(e){
+      alert("Не вдалося прочитати файл маршруту");
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+function exportBack(){
+  const payload = {type:"star_logist_driver_update", routeDate:state.routeDate, driverName:state.driverName, points:state.points};
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  const safeDate = (state.routeDate || "route").replace(/[^\w\-]+/g,"_");
+  a.href = URL.createObjectURL(blob);
+  a.download = `star-logist-driver-update-${safeDate}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+}
+function render(){
+  document.getElementById("dateOut").textContent = state.routeDate;
+  document.getElementById("driverOut").textContent = state.driverName;
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+  if(!state.points.length){
+    content.innerHTML = '<div class="empty">Немає маршруту. Натисни “Імпорт маршруту” і вибери файл від диспетчера.</div>';
+    return;
+  }
+  state.points.forEach((point, index) => {
+    const card = document.createElement("div");
+    card.className = point.fromFirm ? "card firm" : "card";
+    card.innerHTML = `
+      <div class="point">${point.pointLabel || `${index + 1}-точка`}</div>
+      <div class="shop">${point.shop || "Магазин"}</div>
+      ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
+      <div class="raw">${(point.rawText || "").replace(/\n/g, "<br>")}</div>
+      <div class="status ${badgeClass(point.status)}">Статус: ${point.status}</div>
+      <div class="actions">
+        <button class="btn-delivered" data-id="${point.id}" data-action="delivered">Доставлено</button>
+        <button class="btn-postponed" data-id="${point.id}" data-action="postponed">Перенесено</button>
+      </div>
+    `;
+    content.appendChild(card);
+  });
+  document.querySelectorAll("button[data-action]").forEach(btn => {
+    btn.onclick = () => {
+      const id = Number(btn.getAttribute("data-id"));
+      const action = btn.getAttribute("data-action");
+      if(action === "delivered") setStatus(id, "Доставлено");
+      if(action === "postponed") setStatus(id, "Перенесено");
+    };
+  });
+}
+document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("fileInput").click());
+document.getElementById("fileInput").addEventListener("change", (e)=>{ const file=e.target.files[0]; if(file) importFile(file); });
+document.getElementById("exportBtn").addEventListener("click", exportBack);
+loadState(); render();
+</script>
+</body>
+</html>

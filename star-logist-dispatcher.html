@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#111827" />
+<link rel="icon" type="image/svg+xml" href="star-icon-v2.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="star-icon-v2-192.png" />
+<link rel="apple-touch-icon" href="star-icon-v2-apple.png" />
+<link rel="manifest" href="star-logist-dispatcher.webmanifest" />
+<title>STAR Logist — Диспетчер</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --panel:#fff; --border:#bfbfbf; --text:#111827; --muted:#4b5563;
+    --blue:#3b82f6; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --firm-bg:#dcfce7;
+  }
+  *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .page{max-width:1200px;margin:0 auto;padding:24px}
+  .brand{display:inline-block;background:#111827;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700;letter-spacing:.4px;margin-bottom:10px}
+  h1{margin:6px 0 8px;font-size:34px}.sub{color:var(--muted);margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:18px}
+  input,textarea,button{font:inherit}
+  input,textarea{width:100%;padding:12px;border:1px solid #c7c7c7;border-radius:10px;background:#fff}
+  textarea{min-height:170px;resize:vertical}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .panel{background:var(--panel);border:1px solid #d1d5db;border-radius:14px;padding:16px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+  button{border:none;border-radius:14px;padding:14px 22px;cursor:pointer;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .primary{background:#111827;color:#fff}.danger{background:var(--red);color:#fff}.secondary{background:#6b7280;color:#fff}
+  .btn-loaded{background:var(--blue);color:#fff;min-width:150px}.btn-delivered{background:var(--green);color:#fff;min-width:150px}
+  .btn-postponed{background:var(--yellow);color:#111827;min-width:150px}.btn-firm{background:#e5e7eb;color:#111827;min-width:140px}
+  .btn-firm.active{background:var(--green);color:#fff}.btn-edit{background:#f59e0b;color:#fff;min-width:140px}
+  .meta{font-size:18px}.empty{background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:24px;text-align:center;color:#6b7280}
+  table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed} td{border:1px solid var(--border);vertical-align:top;padding:10px 14px;font-size:16px;line-height:1.45}
+  .left-col{width:150px;font-size:22px;vertical-align:middle;text-align:left}.shop{font-size:22px;font-weight:500}
+  .raw{white-space:pre-wrap;font-size:20px;min-height:280px}.status-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+  .status-buttons{display:flex;gap:8px;flex-wrap:wrap}.row-firm td{background:var(--firm-bg)}
+  .status-badge{display:inline-block;font-size:18px;padding:12px 16px;border-radius:12px;font-weight:700}
+  .badge-loaded{background:#dbeafe;color:#1d4ed8}.badge-delivered{background:#dcfce7;color:#15803d}.badge-postponed{background:#fef3c7;color:#a16207}
+  .firm-label-screen{display:none}.help{font-size:14px;color:#6b7280;margin-top:8px}
+  @media print{
+    *{-webkit-print-color-adjust:exact !important; print-color-adjust:exact !important}
+    body{background:#fff}.no-print{display:none!important}.page{max-width:none;padding:0}.panel{box-shadow:none;border-radius:0}.brand,.sub,h1{display:none}
+    .row-firm td{background:var(--firm-bg)!important;border:2px solid #000!important}.row-firm td:first-child{border-left:6px solid #000!important}
+    .firm-label-screen{display:block!important;font-size:15px;font-weight:700;margin-bottom:8px;letter-spacing:.5px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="brand">STAR Logist</div>
+  <h1>Диспетчер</h1>
+  <div class="sub">Основна версія: створення маршруту, друк, магазини, статуси, експорт для водія і імпорт оновлень назад.</div>
+
+  <div class="grid no-print">
+    <input id="routeDate" placeholder="Дата" />
+    <input id="driverName" placeholder="Водій" />
+    <input id="shopName" placeholder="Назва магазину" />
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="primary" id="printBtn">Друк</button>
+    <button class="secondary" id="exportBtn">Експорт для водія</button>
+    <button class="secondary" id="importDriverBtn">Імпорт від водія</button>
+    <input type="file" id="driverFileInput" accept=".json,application/json" style="display:none">
+    <button class="danger" id="clearBtn">Очистити все</button>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-top:0">Додати точку</h3>
+    <textarea id="newRawText" placeholder="Встав текст з Viber"></textarea>
+    <div style="margin-top:12px">
+      <button class="primary" id="addPointBtn">Додати</button>
+    </div>
+    <div class="help">Після заповнення натисни “Експорт для водія”. Після роботи водія натисни “Імпорт від водія” і вибери оновлений файл.</div>
+  </div>
+
+  <div class="panel">
+    <div class="meta"><b>Дата:</b> <span id="dateOut"></span></div>
+    <div class="meta" style="margin-top:4px"><b>Водій:</b> <span id="driverOut"></span></div>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<script>
+const STORAGE_KEY = "star_logist_dispatcher_v3";
+const defaultState = {routeDate:"2026-04-20", driverName:"Водій 1", shopName:"Магазин-львів 1", points:[]};
+let state = structuredClone(defaultState);
+const routeDateEl = document.getElementById("routeDate");
+const driverNameEl = document.getElementById("driverName");
+const shopNameEl = document.getElementById("shopName");
+const newRawTextEl = document.getElementById("newRawText");
+const dateOutEl = document.getElementById("dateOut");
+const driverOutEl = document.getElementById("driverOut");
+const contentEl = document.getElementById("content");
+
+function loadState(){ try{ const saved=localStorage.getItem(STORAGE_KEY); if(saved) state=JSON.parse(saved);}catch(e){console.error(e);} }
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function syncHeader(){ routeDateEl.value=state.routeDate; driverNameEl.value=state.driverName; shopNameEl.value=state.shopName; dateOutEl.textContent=state.routeDate; driverOutEl.textContent=state.driverName; }
+function renumber(){ state.points=state.points.map((p,i)=>({...p, pointLabel:`${i+1}-точка`})); }
+function badgeClass(status){ if(status==="Доставлено") return "badge-delivered"; if(status==="Перенесено") return "badge-postponed"; return "badge-loaded"; }
+function addPoint(){ const text=newRawTextEl.value.trim(); if(!text) return; state.points.push({id:Date.now(), pointLabel:`${state.points.length+1}-точка`, shop:state.shopName||"Магазин", rawText:text, status:"Загружено", fromFirm:false}); newRawTextEl.value=""; render(); }
+function setStatus(id, status){ state.points=state.points.map(p=>p.id===id?{...p,status}:p); render(); }
+function toggleFirm(id){ state.points=state.points.map(p=>p.id===id?{...p,fromFirm:!p.fromFirm}:p); render(); }
+function editPoint(id){ const point=state.points.find(p=>p.id===id); if(!point) return; const next=prompt("Редагувати текст точки", point.rawText); if(next!==null && next.trim()){ point.rawText=next.trim(); render(); } }
+function editShop(id){ const point=state.points.find(p=>p.id===id); if(!point) return; const next=prompt("Назва магазину", point.shop || ""); if(next!==null && next.trim()){ point.shop=next.trim(); render(); } }
+function deletePoint(id){ state.points=state.points.filter(p=>p.id!==id); renumber(); render(); }
+function clearAll(){ if(!confirm("Очистити весь маршрут?")) return; state=structuredClone(defaultState); localStorage.removeItem(STORAGE_KEY); render(); }
+function exportForDriver(){
+  const payload = {type:"star_logist_driver_route", routeDate:state.routeDate, driverName:state.driverName, points:state.points};
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  const safeDate = (state.routeDate || "route").replace(/[^\w\-]+/g,"_");
+  a.href = URL.createObjectURL(blob);
+  a.download = `star-logist-route-${safeDate}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+}
+function importDriverUpdate(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.points)){ alert("Невірний файл від водія"); return; }
+      state.routeDate = parsed.routeDate || state.routeDate;
+      state.driverName = parsed.driverName || state.driverName;
+      state.points = parsed.points;
+      renumber();
+      render();
+      alert("Оновлення від водія імпортовано");
+    }catch(e){
+      alert("Не вдалося прочитати файл");
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+function createButton(text, className, handler){ const btn=document.createElement("button"); btn.className=className; btn.textContent=text; btn.onclick=handler; return btn; }
+function render(){
+  syncHeader();
+  if(!state.points.length){ contentEl.innerHTML='<div class="empty">Маршрут поки порожній. Додай першу точку.</div>'; saveState(); return; }
+  const table=document.createElement("table"); table.innerHTML='<colgroup><col style="width:150px"><col></colgroup>'; const tbody=document.createElement("tbody");
+  state.points.forEach((point)=>{
+    const tr1=document.createElement("tr"); if(point.fromFirm) tr1.className="row-firm";
+    const leftTd=document.createElement("td"); leftTd.className="left-col"; leftTd.rowSpan=3; leftTd.textContent=point.pointLabel;
+    const shopTd=document.createElement("td"); shopTd.className="shop"; shopTd.textContent=point.shop; tr1.append(leftTd, shopTd);
+    const tr2=document.createElement("tr"); if(point.fromFirm) tr2.className="row-firm";
+    const rawTd=document.createElement("td"); const rawDiv=document.createElement("div"); rawDiv.className="raw";
+    if(point.fromFirm){ rawDiv.innerHTML='<div class="firm-label-screen">ФІРМА</div>' + point.rawText.replace(/\n/g, "<br>"); } else { rawDiv.textContent=point.rawText; }
+    rawTd.appendChild(rawDiv); tr2.appendChild(rawTd);
+    const tr3=document.createElement("tr"); if(point.fromFirm) tr3.className="row-firm";
+    const statusTd=document.createElement("td"); const row=document.createElement("div"); row.className="status-row";
+    const badge=document.createElement("div"); badge.className=`status-badge ${badgeClass(point.status)}`; badge.textContent=`Статус: ${point.status}`;
+    const btnWrap=document.createElement("div"); btnWrap.className="status-buttons no-print";
+    btnWrap.appendChild(createButton("Загружено","btn-loaded",()=>setStatus(point.id,"Загружено")));
+    btnWrap.appendChild(createButton("Доставлено","btn-delivered",()=>setStatus(point.id,"Доставлено")));
+    btnWrap.appendChild(createButton("Перенесено","btn-postponed",()=>setStatus(point.id,"Перенесено")));
+    btnWrap.appendChild(createButton(point.fromFirm ? "Фірма ✔":"Фірма", point.fromFirm ? "btn-firm active":"btn-firm", ()=>toggleFirm(point.id)));
+    btnWrap.appendChild(createButton("Магазин","btn-edit",()=>editShop(point.id)));
+    btnWrap.appendChild(createButton("Редагувати","btn-edit",()=>editPoint(point.id)));
+    btnWrap.appendChild(createButton("Видалити","danger",()=>deletePoint(point.id)));
+    row.append(badge, btnWrap); statusTd.appendChild(row); tr3.appendChild(statusTd);
+    tbody.append(tr1,tr2,tr3);
+  });
+  table.appendChild(tbody); contentEl.innerHTML=""; contentEl.appendChild(table); saveState();
+}
+routeDateEl.addEventListener("input", ()=>{ state.routeDate=routeDateEl.value; render(); });
+driverNameEl.addEventListener("input", ()=>{ state.driverName=driverNameEl.value; render(); });
+shopNameEl.addEventListener("input", ()=>{ state.shopName=shopNameEl.value; render(); });
+document.getElementById("addPointBtn").addEventListener("click", addPoint);
+document.getElementById("printBtn").addEventListener("click", ()=>window.print());
+document.getElementById("clearBtn").addEventListener("click", clearAll);
+document.getElementById("exportBtn").addEventListener("click", exportForDriver);
+document.getElementById("importDriverBtn").addEventListener("click", ()=>document.getElementById("driverFileInput").click());
+document.getElementById("driverFileInput").addEventListener("change", (e)=>{ const file=e.target.files[0]; if(file) importDriverUpdate(file); });
+loadState(); renumber(); render();
+</script>
+</body>
+</html>
