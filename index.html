@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="star-icon-v3.svg?v=4" />
+<link rel="icon" type="image/png" sizes="192x192" href="star-icon-v3-192.png?v=4" />
+<link rel="apple-touch-icon" href="star-icon-v3-apple.png?v=4" />
 <title>STAR Logist Routes</title>
 <style>
 :root{
@@ -67,12 +70,27 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .badge-postponed{background:#fef3c7;color:#a16207}
 .status-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .status-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.phone-summary{margin-top:14px;background:#fff7ed;border:2px solid #fb923c;border-radius:16px;padding:14px}
+.phone-summary-title{font-size:20px;font-weight:800;margin-bottom:10px;color:#9a3412}
+.phone-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.phone-item{background:#fff;border:1px solid #fdba74;border-left:6px solid #f97316;border-radius:12px;padding:10px 12px}
+.phone-number{font-size:22px;font-weight:800;color:#b91c1c;line-height:1.2;word-break:break-word}
+.phone-point{font-size:13px;color:#7c2d12;margin-top:4px;font-weight:700}
 .driver-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
 .driver-card.firm{background:var(--firm);border-color:#86efac}
 .point{font-size:24px;font-weight:700;margin-bottom:8px}
 .firm-badge{display:inline-block;background:#16a34a;color:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:14px;margin-bottom:10px}
 .driver-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .logout{margin-left:auto}
+.rich-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.color-btn{width:34px;height:34px;min-width:34px;padding:0;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.22)}
+.rich-editor{width:100%;min-height:170px;padding:12px;border:1px solid #c7c7c7;border-radius:10px;background:#fff;font-size:17px;line-height:1.45;white-space:pre-wrap;overflow:auto}
+.rich-editor:empty:before{content:attr(data-placeholder);color:#9ca3af}
+.rich-editor:focus{outline:3px solid #bfdbfe;border-color:#3b82f6}
+.edit-modal{position:fixed;inset:0;background:rgba(17,24,39,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.edit-box{width:min(920px,100%);background:#fff;border-radius:18px;padding:16px;box-shadow:0 18px 45px rgba(0,0,0,.28)}
+.edit-title{font-size:22px;font-weight:700;margin:0 0 12px}
+.edit-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
 @media (max-width: 900px){
   .layout{grid-template-columns:1fr}
 }
@@ -254,7 +272,15 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 
           <div class="panel">
             <h3 style="margin-top:0">Додати точку</h3>
-            <textarea id="newPointText" placeholder="Встав текст з Viber"></textarea>
+            <div class="rich-toolbar" data-rich-target="newPointEditor">
+              <button class="color-btn" type="button" data-color="#111827" title="Чорний" style="background:#111827"></button>
+              <button class="color-btn" type="button" data-color="#dc2626" title="Червоний" style="background:#dc2626"></button>
+              <button class="color-btn" type="button" data-color="#2563eb" title="Синій" style="background:#2563eb"></button>
+              <button class="color-btn" type="button" data-color="#16a34a" title="Зелений" style="background:#16a34a"></button>
+              <button class="color-btn" type="button" data-color="#ca8a04" title="Жовтий" style="background:#ca8a04"></button>
+              <button class="secondary" type="button" data-clear-color>Без кольору</button>
+            </div>
+            <div id="newPointEditor" class="rich-editor" contenteditable="true" data-placeholder="Встав текст з Viber"></div>
             <div class="toolbar" style="margin-top:12px">
               <button class="primary" id="addPointBtn">Додати точку</button>
             </div>
@@ -294,6 +320,25 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 </div>
 
 <div id="printRouteContent" class="print-route"></div>
+
+<div id="pointEditModal" class="edit-modal hidden">
+  <div class="edit-box">
+    <div class="edit-title">Редагувати доставку</div>
+    <div class="rich-toolbar" data-rich-target="pointEditEditor">
+      <button class="color-btn" type="button" data-color="#111827" title="Чорний" style="background:#111827"></button>
+      <button class="color-btn" type="button" data-color="#dc2626" title="Червоний" style="background:#dc2626"></button>
+      <button class="color-btn" type="button" data-color="#2563eb" title="Синій" style="background:#2563eb"></button>
+      <button class="color-btn" type="button" data-color="#16a34a" title="Зелений" style="background:#16a34a"></button>
+      <button class="color-btn" type="button" data-color="#ca8a04" title="Жовтий" style="background:#ca8a04"></button>
+      <button class="secondary" type="button" data-clear-color>Без кольору</button>
+    </div>
+    <div id="pointEditEditor" class="rich-editor" contenteditable="true"></div>
+    <div class="edit-actions">
+      <button class="secondary" id="cancelPointEditBtn">Скасувати</button>
+      <button class="primary" id="savePointEditBtn">Зберегти</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -500,7 +545,8 @@ document.getElementById("changeRouteDriverBtn").addEventListener("click", change
 
 async function addPoint(){
   if(!currentRouteId) return showNotice("Спочатку відкрий або створи маршрут","warn");
-  const text = document.getElementById("newPointText").value.trim();
+  const draft = getNewPointDraft();
+  const text = draft.text;
   if(!text) return showNotice("Встав текст точки","warn");
   const route = routes[currentRouteId];
   const points = route.points || [];
@@ -509,19 +555,21 @@ async function addPoint(){
     pointLabel: `${points.length + 1}-точка`,
     shop: "Магазин",
     rawText: text,
+    rawHtml: draft.html,
     status: "Загружено",
     fromFirm: false
   });
   await update(ref(db, "routes/" + currentRouteId), { points });
-  document.getElementById("newPointText").value = "";
+  clearNewPointDraft();
 }
 
 document.getElementById("addPointBtn").addEventListener("click", addPoint);
 
-async function insertPointAfter(routeId, afterPointId, text){
+async function insertPointAfter(routeId, afterPointId){
   const route = routes[routeId];
   if(!route) return;
-  const sourceText = (text || "").trim();
+  const draft = getNewPointDraft();
+  const sourceText = draft.text;
   if(!sourceText) return showNotice("Встав текст точки, яку треба вставити між доставками","warn");
   const oldPoints = route.points || [];
   const insertIndex = oldPoints.findIndex(p => p.id === afterPointId);
@@ -531,6 +579,7 @@ async function insertPointAfter(routeId, afterPointId, text){
     pointLabel: "",
     shop: "Магазин",
     rawText: sourceText,
+    rawHtml: draft.html,
     status: "Загружено",
     fromFirm: false
   };
@@ -538,7 +587,7 @@ async function insertPointAfter(routeId, afterPointId, text){
   points.splice(insertIndex + 1, 0, newPoint);
   const normalized = points.map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
   await update(ref(db, "routes/" + routeId), { points: normalized });
-  document.getElementById("newPointText").value = "";
+  clearNewPointDraft();
   showNotice("Точку вставлено в маршрут","ok");
 }
 
@@ -549,6 +598,175 @@ function escapeHtml(s){
     .replace(/>/g, "&gt;");
 }
 
+const colorMap = {
+  "#111827": "#111827",
+  "rgb(17, 24, 39)": "#111827",
+  "#dc2626": "#dc2626",
+  "rgb(220, 38, 38)": "#dc2626",
+  "#2563eb": "#2563eb",
+  "rgb(37, 99, 235)": "#2563eb",
+  "#16a34a": "#16a34a",
+  "rgb(22, 163, 74)": "#16a34a",
+  "#ca8a04": "#ca8a04",
+  "rgb(202, 138, 4)": "#ca8a04"
+};
+let editingPoint = null;
+
+function normalizeColor(color){
+  return colorMap[String(color || "").trim().toLowerCase()] || "";
+}
+
+function sanitizeRichHtml(html){
+  const root = document.createElement("div");
+  root.innerHTML = html || "";
+  function clean(node){
+    if(node.nodeType === Node.TEXT_NODE) return escapeHtml(node.textContent);
+    if(node.nodeType !== Node.ELEMENT_NODE) return "";
+    const tag = node.tagName.toLowerCase();
+    if(tag === "br") return "<br>";
+    const body = Array.from(node.childNodes).map(clean).join("");
+    if(tag === "b" || tag === "strong") return `<strong>${body}</strong>`;
+    if(tag === "i" || tag === "em") return `<em>${body}</em>`;
+    if(tag === "u") return `<u>${body}</u>`;
+    const color = normalizeColor(node.style.color || node.getAttribute("color"));
+    if(color) return `<span style="color:${color}">${body}</span>`;
+    if(tag === "div" || tag === "p") return `${body}<br>`;
+    return body;
+  }
+  return Array.from(root.childNodes).map(clean).join("").replace(/(<br>){3,}/g, "<br><br>").replace(/(<br>)+$/g, "");
+}
+
+function plainTextFromEditor(editor){
+  return (editor.innerText || "").replace(/\u00a0/g, " ").trim();
+}
+
+function richPointHtml(point){
+  if(point?.rawHtml) return sanitizeRichHtml(point.rawHtml);
+  return escapeHtml(point?.rawText || "").replace(/\n/g, "<br>");
+}
+
+function formatPhone(raw){
+  const digits = String(raw || "").replace(/\D/g, "");
+  if(digits.length === 12 && digits.startsWith("380")){
+    return `+${digits.slice(0,3)} ${digits.slice(3,5)} ${digits.slice(5,8)} ${digits.slice(8,10)} ${digits.slice(10,12)}`;
+  }
+  if(digits.length === 10 && digits.startsWith("0")){
+    return `${digits.slice(0,3)} ${digits.slice(3,6)} ${digits.slice(6,8)} ${digits.slice(8,10)}`;
+  }
+  return raw.trim();
+}
+
+function extractRoutePhones(points){
+  const phones = [];
+  const seen = new Set();
+  const phoneRe = /(?:\+?38[\s().-]*)?0\d{2}[\s().-]*\d{3}[\s().-]*\d{2}[\s().-]*\d{2}/g;
+  (points || []).forEach(point => {
+    const text = point?.rawText || "";
+    const matches = text.match(phoneRe) || [];
+    matches.forEach(match => {
+      const digits = match.replace(/\D/g, "");
+      const key = digits.length === 10 ? `38${digits}` : digits;
+      if(seen.has(key)) return;
+      seen.add(key);
+      phones.push({
+        number: formatPhone(match),
+        pointLabel: point.pointLabel || "",
+        shop: point.shop || "Магазин"
+      });
+    });
+  });
+  return phones;
+}
+
+function buildPhoneSummaryHtml(points){
+  const phones = extractRoutePhones(points);
+  if(!phones.length) return "";
+  return `
+    <div class="phone-summary">
+      <div class="phone-summary-title">Телефони доставок</div>
+      <div class="phone-list">
+        ${phones.map(phone => `
+          <div class="phone-item">
+            <div class="phone-number">${escapeHtml(phone.number)}</div>
+            <div class="phone-point">${escapeHtml(phone.pointLabel)} · ${escapeHtml(phone.shop)}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getNewPointDraft(){
+  const editor = document.getElementById("newPointEditor");
+  return {
+    text: plainTextFromEditor(editor),
+    html: sanitizeRichHtml(editor.innerHTML)
+  };
+}
+
+function clearNewPointDraft(){
+  document.getElementById("newPointEditor").innerHTML = "";
+}
+
+function applyColor(targetId, color){
+  const editor = document.getElementById(targetId);
+  editor.focus();
+  document.execCommand("foreColor", false, color);
+}
+
+function clearColor(targetId){
+  const editor = document.getElementById(targetId);
+  editor.focus();
+  document.execCommand("removeFormat", false, null);
+}
+
+document.querySelectorAll(".rich-toolbar").forEach(toolbar => {
+  const targetId = toolbar.getAttribute("data-rich-target");
+  toolbar.querySelectorAll("[data-color]").forEach(btn => {
+    btn.addEventListener("click", () => applyColor(targetId, btn.getAttribute("data-color")));
+  });
+  const clearBtn = toolbar.querySelector("[data-clear-color]");
+  if(clearBtn) clearBtn.addEventListener("click", () => clearColor(targetId));
+});
+
+document.querySelectorAll(".rich-editor").forEach(editor => {
+  editor.addEventListener("paste", event => {
+    event.preventDefault();
+    const text = event.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
+  });
+});
+
+function openPointEditor(routeId, point){
+  editingPoint = { routeId, pointId: point.id };
+  const editor = document.getElementById("pointEditEditor");
+  editor.innerHTML = richPointHtml(point);
+  document.getElementById("pointEditModal").classList.remove("hidden");
+  setTimeout(() => editor.focus(), 0);
+}
+
+function closePointEditor(){
+  editingPoint = null;
+  document.getElementById("pointEditModal").classList.add("hidden");
+  document.getElementById("pointEditEditor").innerHTML = "";
+}
+
+document.getElementById("cancelPointEditBtn").addEventListener("click", closePointEditor);
+document.getElementById("pointEditModal").addEventListener("click", event => {
+  if(event.target.id === "pointEditModal") closePointEditor();
+});
+document.getElementById("savePointEditBtn").addEventListener("click", () => {
+  if(!editingPoint) return;
+  const editor = document.getElementById("pointEditEditor");
+  const text = plainTextFromEditor(editor);
+  if(!text) return showNotice("Текст доставки не може бути порожній","warn");
+  updatePoint(editingPoint.routeId, editingPoint.pointId, {
+    rawText: text,
+    rawHtml: sanitizeRichHtml(editor.innerHTML)
+  });
+  closePointEditor();
+});
+
 function buildDriverCardsHtml(route){
   const points = route?.points || [];
   if(!points.length) return '<div class="empty">У цьому маршруті ще немає точок.</div>';
@@ -557,7 +775,7 @@ function buildDriverCardsHtml(route){
       <div class="point">${point.pointLabel}</div>
       <div class="shop">${escapeHtml(point.shop || "Магазин")}</div>
       ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
-      <div class="raw">${escapeHtml(point.rawText || "").replace(/\n/g, "<br>")}</div>
+      <div class="raw">${richPointHtml(point)}</div>
       <div class="status-badge ${badgeClass(point.status)}">Статус: ${escapeHtml(point.status)}</div>
       <div class="driver-actions" style="margin-top:14px">
         <button class="green">Доставлено</button>
@@ -581,6 +799,7 @@ function renderPrintRoute(routeId){
       <div><b>Водій:</b> ${escapeHtml(driverNameById(route.driverId))}</div>
     </div>
     ${buildDriverCardsHtml(route)}
+    ${buildPhoneSummaryHtml(route.points || [])}
   `;
   return true;
 }
@@ -667,7 +886,7 @@ function renderCurrentRoute(){
     const rawTd = document.createElement("td");
     const rawDiv = document.createElement("div");
     rawDiv.className = "raw";
-    rawDiv.textContent = point.rawText || "";
+    rawDiv.innerHTML = richPointHtml(point);
     rawTd.appendChild(rawDiv);
     tr2.appendChild(rawTd);
 
@@ -693,15 +912,14 @@ function renderCurrentRoute(){
     btnWrap.appendChild(makeBtn("Загружено","blue",()=>updatePoint(currentRouteId, point.id, {status:"Загружено"})));
     btnWrap.appendChild(makeBtn("Доставлено","green",()=>updatePoint(currentRouteId, point.id, {status:"Доставлено"})));
     btnWrap.appendChild(makeBtn("Перенесено","yellow",()=>updatePoint(currentRouteId, point.id, {status:"Перенесено"})));
-    btnWrap.appendChild(makeBtn("Вставити після","blue",()=>insertPointAfter(currentRouteId, point.id, document.getElementById("newPointText").value)));
+    btnWrap.appendChild(makeBtn("Вставити після","blue",()=>insertPointAfter(currentRouteId, point.id)));
     btnWrap.appendChild(makeBtn(point.fromFirm ? "Фірма ✔":"Фірма", point.fromFirm ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {fromFirm: !point.fromFirm})));
     btnWrap.appendChild(makeBtn("Магазин","secondary",()=>{
       const next = prompt("Назва магазину", point.shop || "");
       if(next !== null && next.trim()) updatePoint(currentRouteId, point.id, {shop: next.trim()});
     }));
     btnWrap.appendChild(makeBtn("Редагувати","secondary",()=>{
-      const next = prompt("Редагувати текст точки", point.rawText || "");
-      if(next !== null && next.trim()) updatePoint(currentRouteId, point.id, {rawText: next.trim()});
+      openPointEditor(currentRouteId, point);
     }));
     btnWrap.appendChild(makeBtn("Видалити","danger",()=>deletePoint(currentRouteId, point.id)));
 
@@ -714,6 +932,7 @@ function renderCurrentRoute(){
   table.appendChild(tbody);
   wrap.innerHTML = "";
   wrap.appendChild(table);
+  wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
 document.getElementById("driverModeSelect").addEventListener("change", e=>{
@@ -767,9 +986,9 @@ function renderDriverCurrentRoute(){
     card.className = "driver-card" + (point.fromFirm ? " firm" : "");
     card.innerHTML = `
       <div class="point">${point.pointLabel}</div>
-      <div class="shop">${point.shop || "Магазин"}</div>
+      <div class="shop">${escapeHtml(point.shop || "Магазин")}</div>
       ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
-      <div class="raw">${(point.rawText || "").replace(/\n/g, "<br>")}</div>
+      <div class="raw">${richPointHtml(point)}</div>
       <div class="status-badge ${badgeClass(point.status)}">Статус: ${point.status}</div>
       <div class="driver-actions" style="margin-top:14px">
         <button class="green" data-action="delivered" data-point="${point.id}">Доставлено</button>
@@ -790,12 +1009,14 @@ function renderDriverCurrentRoute(){
     const point = route.points.find(p=>p.id===pointId);
     updatePoint(selectedDriverRouteId, pointId, {
       status:"Перенесено",
-      rawText: (point?.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + (note || "")
+      rawText: (point?.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + (note || ""),
+      rawHtml: ""
     });
   }
 }
     };
   });
+  wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
 listenDrivers();

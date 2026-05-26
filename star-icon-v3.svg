@@ -1,9 +1,9 @@
 ﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#151515"/>
-  <path d="M49 146h414l-14 49H35z" fill="#ee1823"/>
-  <path d="M45 207h418l-14 49H31z" fill="#ee1823"/>
+  <rect width="512" height="512" rx="72" fill="#050816"/>
+  <path d="M49 146h414l-14 49H35z" fill="#ff2338"/>
+  <path d="M45 207h418l-14 49H31z" fill="#ff2338"/>
   <text x="256" y="235" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="128" font-weight="900" fill="#fff">STAR</text>
-  <g fill="#e8be13" transform="translate(0 8)">
+  <g fill="#ffd21f" stroke="#fff3a3" stroke-width="4" transform="translate(0 8)">
     <path d="M128 306l11 33h35l-28 21 11 34-29-21-29 21 11-34-28-21h35z"/>
     <path d="M192 306l11 33h35l-28 21 11 34-29-21-29 21 11-34-28-21h35z"/>
     <path d="M256 306l11 33h35l-28 21 11 34-29-21-29 21 11-34-28-21h35z"/>
