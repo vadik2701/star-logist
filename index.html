@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="icon" type="image/svg+xml" href="star-icon-v3.svg?v=4" />
-<link rel="icon" type="image/png" sizes="192x192" href="star-icon-v3-192.png?v=4" />
-<link rel="apple-touch-icon" href="star-icon-v3-apple.png?v=4" />
+<meta name="theme-color" content="#050816" />
+<link rel="icon" type="image/svg+xml" href="star-icon-v3.svg?v=20260527" />
+<link rel="icon" type="image/png" sizes="192x192" href="star-icon-v3-192.png?v=20260527" />
+<link rel="apple-touch-icon" href="star-icon-v3-apple.png?v=20260527" />
+<link rel="manifest" href="star-logist.webmanifest?v=20260527" />
 <title>STAR Logist Routes</title>
 <style>
 :root{
@@ -416,6 +418,8 @@ const DISPATCHER_PASSWORD = "224816";
 const DRIVER_PASSWORD = "8888";
 const AUTH_KEY = "star_logist_auth_ok";
 const ROLE_KEY = "star_logist_role";
+const AUTH_VERSION = "2026-05-27-role-passwords-v2";
+const AUTH_VERSION_KEY = "star_logist_auth_version";
 const firebaseConfig = {
   "apiKey": "AIzaSyDT8lXwV-DhkwuF9Vq8ZrOipgJ_TtabePc",
   "authDomain": "star-logist.firebaseapp.com",
@@ -458,6 +462,7 @@ function completeLogin(role){
   currentUserRole = role;
   localStorage.setItem(AUTH_KEY,"1");
   localStorage.setItem(ROLE_KEY, role);
+  localStorage.setItem(AUTH_VERSION_KEY, AUTH_VERSION);
   loginScreen.classList.add("hidden");
   appScreen.classList.remove("hidden");
   applyRole();
@@ -469,15 +474,20 @@ function tryLogin(){
   else if(password === DRIVER_PASSWORD) completeLogin("driver");
   else loginErr.textContent = "Неправильний пароль";
 }
-if(localStorage.getItem(AUTH_KEY) === "1"){
+const savedAuthVersion = localStorage.getItem(AUTH_VERSION_KEY);
+if(localStorage.getItem(AUTH_KEY) === "1" && savedAuthVersion === AUTH_VERSION){
   if(!currentUserRole) currentUserRole = "dispatcher";
   loginScreen.classList.add("hidden");
   appScreen.classList.remove("hidden");
   setTimeout(applyRole, 0);
+} else {
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem(ROLE_KEY);
+  localStorage.removeItem(AUTH_VERSION_KEY);
 }
 loginBtn.addEventListener("click", tryLogin);
 passwordInput.addEventListener("keydown", e=>{ if(e.key==="Enter") tryLogin(); });
-logoutBtn.addEventListener("click", ()=>{ localStorage.removeItem(AUTH_KEY); localStorage.removeItem(ROLE_KEY); location.reload(); });
+logoutBtn.addEventListener("click", ()=>{ localStorage.removeItem(AUTH_KEY); localStorage.removeItem(ROLE_KEY); localStorage.removeItem(AUTH_VERSION_KEY); location.reload(); });
 
 function showNotice(text, kind="ok"){
   noticeBox.innerHTML = `<div class="notice ${kind}">${text}</div>`;
