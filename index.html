@@ -76,8 +76,35 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .phone-item{background:#fff;border:1px solid #fdba74;border-left:6px solid #f97316;border-radius:12px;padding:10px 12px}
 .phone-number{font-size:22px;font-weight:800;color:#b91c1c;line-height:1.2;word-break:break-word}
 .phone-point{font-size:13px;color:#7c2d12;margin-top:4px;font-weight:700}
+.money-summary{margin-top:14px;background:#ecfdf5;border:2px solid #22c55e;border-radius:16px;padding:14px}
+.money-summary-title{font-size:20px;font-weight:800;margin-bottom:10px;color:#166534}
+.money-total{font-size:30px;font-weight:900;color:#15803d;margin-bottom:10px}
+.money-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.money-item{background:#fff;border:1px solid #86efac;border-left:6px solid #22c55e;border-radius:12px;padding:10px 12px}
+.money-value{font-size:22px;font-weight:800;color:#166534;line-height:1.2}
+.money-point{font-size:13px;color:#14532d;margin-top:4px;font-weight:700}
+.money-detail{font-size:13px;color:#166534;margin-top:5px;line-height:1.35}
+.status-summary,.problem-summary{margin-top:14px;background:#fff;border:1px solid #d1d5db;border-radius:16px;padding:14px}
+.status-summary-title,.problem-summary-title{font-size:18px;font-weight:800;margin-bottom:10px}
+.status-pills{display:flex;gap:8px;flex-wrap:wrap}
+.status-pill{display:inline-block;border-radius:999px;padding:9px 12px;font-weight:800;font-size:14px}
+.status-pill.loaded{background:#dbeafe;color:#1d4ed8}
+.status-pill.delivered{background:#dcfce7;color:#15803d}
+.status-pill.postponed{background:#fef3c7;color:#a16207}
+.problem-summary{border-color:#fca5a5;background:#fff1f2}
+.problem-summary-title{color:#991b1b}
+.problem-item{font-size:14px;color:#7f1d1d;margin-top:6px;font-weight:700}
+.search-match td{background:#fff7ed!important;box-shadow:inset 5px 0 0 #f97316}
+.archived-route{opacity:.58}
+.row-important td{background:#fef3c7!important}
+.important-flag{display:inline-block;background:#dc2626;color:#fff;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px;margin:0 0 8px}
+.point-note{margin-top:10px;padding:10px 12px;border-left:5px solid #2563eb;background:#eff6ff;border-radius:10px;color:#1e3a8a;font-weight:700;white-space:pre-wrap}
+.change-log{margin-bottom:14px;background:#fff;border:1px solid #d1d5db;border-radius:16px;padding:14px}
+.change-log-title{font-size:18px;font-weight:800;margin-bottom:8px}
+.change-log-item{font-size:13px;color:#4b5563;margin-top:5px}
 .driver-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
 .driver-card.firm{background:var(--firm);border-color:#86efac}
+.driver-card.important{background:#fef3c7;border-color:#f59e0b}
 .point{font-size:24px;font-weight:700;margin-bottom:8px}
 .firm-badge{display:inline-block;background:#16a34a;color:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:14px;margin-bottom:10px}
 .driver-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -226,7 +253,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 
     <div class="panel">
       <div id="noticeBox"></div>
-      <div class="small">Firebase підключений. Пароль: 8888.</div>
+      <div class="small">Firebase підключений. Доступ розділено для диспетчера і водія.</div>
     </div>
 
     <div id="dispatcherView">
@@ -250,6 +277,9 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 
           <div class="panel">
             <h3 style="margin-top:0">Усі маршрути</h3>
+            <label class="small" style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+              <input id="showArchivedRoutes" type="checkbox" style="width:auto"> Показати завершені
+            </label>
             <div id="routeList" class="route-list"></div>
           </div>
         </div>
@@ -266,8 +296,13 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
               <button class="secondary" id="copyRouteIdBtn">Копіювати ID</button>
               <button class="blue" id="changeRouteDriverBtn">Змінити водія</button>
               <button class="blue" id="printRouteBtn">Друк маршруту</button>
+              <button class="secondary" id="archiveRouteBtn">Завершити маршрут</button>
               <button class="danger" id="deleteRouteBtn">Видалити маршрут</button>
             </div>
+          </div>
+
+          <div class="panel">
+            <input id="routeSearchInput" placeholder="Пошук у маршруті: телефон, місто, ім’я або номер товару" />
           </div>
 
           <div class="panel">
@@ -312,6 +347,14 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
               <div><b>Водій:</b> <span id="driverRouteDriver">—</span></div>
             </div>
           </div>
+          <div class="panel">
+            <h3 style="margin-top:0">Додати точку</h3>
+            <textarea id="driverNewPointText" placeholder="Встав текст нової точки"></textarea>
+            <div class="toolbar" style="margin-top:12px">
+              <button class="primary" id="driverAddPointBtn">Додати точку</button>
+            </div>
+            <div class="small" style="margin-top:8px">Точка додається в кінець вибраного маршруту зі статусом “Загружено”.</div>
+          </div>
           <div id="driverRouteContent"></div>
         </div>
       </div>
@@ -340,12 +383,39 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   </div>
 </div>
 
+<div id="costEditModal" class="edit-modal hidden">
+  <div class="edit-box">
+    <div class="edit-title">Сума доставки</div>
+    <input id="costEditInput" inputmode="decimal" placeholder="Наприклад 1200" />
+    <div class="small" style="margin-top:8px">Порожньо або кнопка “Автоматично” повертає автоматичний підрахунок.</div>
+    <div class="edit-actions">
+      <button class="secondary" id="autoCostBtn">Автоматично</button>
+      <button class="secondary" id="cancelCostEditBtn">Скасувати</button>
+      <button class="primary" id="saveCostEditBtn">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<div id="noteEditModal" class="edit-modal hidden">
+  <div class="edit-box">
+    <div class="edit-title">Примітка для водія</div>
+    <textarea id="noteEditInput" placeholder="Наприклад: дзвонити за годину, потрібен напарник, 2 поверх"></textarea>
+    <div class="edit-actions">
+      <button class="secondary" id="clearNoteBtn">Очистити</button>
+      <button class="secondary" id="cancelNoteEditBtn">Скасувати</button>
+      <button class="primary" id="saveNoteEditBtn">Зберегти</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-const PASSWORD = "8888";
+const DISPATCHER_PASSWORD = "224816";
+const DRIVER_PASSWORD = "8888";
 const AUTH_KEY = "star_logist_auth_ok";
+const ROLE_KEY = "star_logist_role";
 const firebaseConfig = {
   "apiKey": "AIzaSyDT8lXwV-DhkwuF9Vq8ZrOipgJ_TtabePc",
   "authDomain": "star-logist.firebaseapp.com",
@@ -365,6 +435,9 @@ let routes = {};
 let currentRouteId = "";
 let currentDriverMode = "";
 let selectedDriverRouteId = "";
+let showArchivedRoutes = false;
+let routeSearchTerm = "";
+let currentUserRole = localStorage.getItem(ROLE_KEY) || "";
 
 const loginScreen = document.getElementById("loginScreen");
 const appScreen = document.getElementById("appScreen");
@@ -374,22 +447,37 @@ const loginErr = document.getElementById("loginErr");
 const logoutBtn = document.getElementById("logoutBtn");
 const noticeBox = document.getElementById("noticeBox");
 
-function tryLogin(){
-  if(passwordInput.value === PASSWORD){
-    localStorage.setItem(AUTH_KEY,"1");
-    loginScreen.classList.add("hidden");
-    appScreen.classList.remove("hidden");
-  } else {
-    loginErr.textContent = "Неправильний пароль";
-  }
+function applyRole(){
+  const isDriver = currentUserRole === "driver";
+  document.getElementById("dispatcherTab").classList.toggle("hidden", isDriver);
+  if(isDriver) setMode("driver");
+  else setMode("dispatcher");
 }
-if(localStorage.getItem(AUTH_KEY) === "1"){
+
+function completeLogin(role){
+  currentUserRole = role;
+  localStorage.setItem(AUTH_KEY,"1");
+  localStorage.setItem(ROLE_KEY, role);
   loginScreen.classList.add("hidden");
   appScreen.classList.remove("hidden");
+  applyRole();
+}
+
+function tryLogin(){
+  const password = passwordInput.value.trim();
+  if(password === DISPATCHER_PASSWORD) completeLogin("dispatcher");
+  else if(password === DRIVER_PASSWORD) completeLogin("driver");
+  else loginErr.textContent = "Неправильний пароль";
+}
+if(localStorage.getItem(AUTH_KEY) === "1"){
+  if(!currentUserRole) currentUserRole = "dispatcher";
+  loginScreen.classList.add("hidden");
+  appScreen.classList.remove("hidden");
+  setTimeout(applyRole, 0);
 }
 loginBtn.addEventListener("click", tryLogin);
 passwordInput.addEventListener("keydown", e=>{ if(e.key==="Enter") tryLogin(); });
-logoutBtn.addEventListener("click", ()=>{ localStorage.removeItem(AUTH_KEY); location.reload(); });
+logoutBtn.addEventListener("click", ()=>{ localStorage.removeItem(AUTH_KEY); localStorage.removeItem(ROLE_KEY); location.reload(); });
 
 function showNotice(text, kind="ok"){
   noticeBox.innerHTML = `<div class="notice ${kind}">${text}</div>`;
@@ -398,6 +486,7 @@ function showNotice(text, kind="ok"){
 }
 
 function setMode(mode){
+  if(currentUserRole === "driver") mode = "driver";
   document.getElementById("dispatcherView").classList.toggle("hidden", mode !== "dispatcher");
   document.getElementById("driverView").classList.toggle("hidden", mode !== "driver");
   document.getElementById("dispatcherTab").className = mode === "dispatcher" ? "tab primary active" : "tab secondary";
@@ -495,6 +584,7 @@ async function createRoute(){
     date: date || "",
     driverId,
     createdAt: Date.now(),
+    history: [{ at: Date.now(), message: "Створено маршрут" }],
     points: []
   };
   await set(ref(db, "routes/" + id), route);
@@ -537,10 +627,28 @@ async function changeRouteDriver(){
     return showNotice("Введи номер водія від 1 до " + drivers.length, "warn");
   }
 
-  await update(ref(db, "routes/" + currentRouteId), { driverId: String(num - 1) });
+  await update(ref(db, "routes/" + currentRouteId), { driverId: String(num - 1), history: appendHistory(route, "Змінено водія маршруту") });
   showNotice("Водія маршруту змінено","ok");
 }
 document.getElementById("changeRouteDriverBtn").addEventListener("click", changeRouteDriver);
+
+async function toggleArchiveCurrentRoute(){
+  if(!currentRouteId) return showNotice("Спочатку відкрий маршрут","warn");
+  const route = routes[currentRouteId];
+  if(!route) return showNotice("Маршрут не знайдено","warn");
+  await update(ref(db, "routes/" + currentRouteId), { archived: !route.archived, history: appendHistory(route, route.archived ? "Маршрут повернено в активні" : "Маршрут завершено") });
+  showNotice(route.archived ? "Маршрут повернено в активні" : "Маршрут завершено","ok");
+}
+
+document.getElementById("archiveRouteBtn").addEventListener("click", toggleArchiveCurrentRoute);
+document.getElementById("showArchivedRoutes").addEventListener("change", e => {
+  showArchivedRoutes = e.target.checked;
+  renderRouteList();
+});
+document.getElementById("routeSearchInput").addEventListener("input", e => {
+  routeSearchTerm = e.target.value.trim();
+  renderCurrentRoute();
+});
 
 
 async function addPoint(){
@@ -559,11 +667,36 @@ async function addPoint(){
     status: "Загружено",
     fromFirm: false
   });
-  await update(ref(db, "routes/" + currentRouteId), { points });
+  await update(ref(db, "routes/" + currentRouteId), { points, history: appendHistory(route, "Додано точку") });
   clearNewPointDraft();
 }
 
 document.getElementById("addPointBtn").addEventListener("click", addPoint);
+
+async function addDriverPoint(){
+  if(!selectedDriverRouteId) return showNotice("Спочатку вибери маршрут","warn");
+  const textEl = document.getElementById("driverNewPointText");
+  const text = textEl.value.trim();
+  if(!text) return showNotice("Встав текст точки","warn");
+  const route = routes[selectedDriverRouteId];
+  if(!route) return showNotice("Маршрут не знайдено","warn");
+  const points = route.points || [];
+  points.push({
+    id: Date.now(),
+    pointLabel: `${points.length + 1}-точка`,
+    shop: "Магазин",
+    rawText: text,
+    rawHtml: "",
+    status: "Загружено",
+    fromFirm: false,
+    addedByDriver: true
+  });
+  await update(ref(db, "routes/" + selectedDriverRouteId), { points, history: appendHistory(route, "Водій додав точку") });
+  textEl.value = "";
+  showNotice("Точку додано","ok");
+}
+
+document.getElementById("driverAddPointBtn").addEventListener("click", addDriverPoint);
 
 async function insertPointAfter(routeId, afterPointId){
   const route = routes[routeId];
@@ -586,7 +719,7 @@ async function insertPointAfter(routeId, afterPointId){
   const points = [...oldPoints];
   points.splice(insertIndex + 1, 0, newPoint);
   const normalized = points.map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
-  await update(ref(db, "routes/" + routeId), { points: normalized });
+  await update(ref(db, "routes/" + routeId), { points: normalized, history: appendHistory(route, "Вставлено точку") });
   clearNewPointDraft();
   showNotice("Точку вставлено в маршрут","ok");
 }
@@ -596,6 +729,14 @@ function escapeHtml(s){
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s){
+  return escapeHtml(s).replace(/"/g, "&quot;");
+}
+
+function searchableText(value){
+  return String(value || "").toLowerCase().replace(/\s+/g, " ");
 }
 
 const colorMap = {
@@ -611,6 +752,8 @@ const colorMap = {
   "rgb(202, 138, 4)": "#ca8a04"
 };
 let editingPoint = null;
+let editingCostPoint = null;
+let editingNotePoint = null;
 
 function normalizeColor(color){
   return colorMap[String(color || "").trim().toLowerCase()] || "";
@@ -659,12 +802,15 @@ function formatPhone(raw){
 function extractRoutePhones(points){
   const phones = [];
   const seen = new Set();
-  const phoneRe = /(?:\+?38[\s().-]*)?0\d{2}[\s().-]*\d{3}[\s().-]*\d{2}[\s().-]*\d{2}/g;
+  const phoneRe = /(?:^|[^\d])(\+?380[\s().-]*\(?\d{2}\)?[\s().-]*\d{3}[\s().-]*\d{2}[\s().-]*\d{2}|(?:\+?38[\s().-]*)?\(?0\d{2}\)?[\s().-]*\d{3}[\s().-]*\d{2}[\s().-]*\d{2})(?!\d)/g;
   (points || []).forEach(point => {
     const text = point?.rawText || "";
-    const matches = text.match(phoneRe) || [];
-    matches.forEach(match => {
+    const matches = Array.from(text.matchAll(phoneRe));
+    matches.forEach(found => {
+      const match = found[1];
       const digits = match.replace(/\D/g, "");
+      if(!(digits.length === 10 || (digits.length === 12 && digits.startsWith("380")))) return;
+      if(digits.length === 10 && digits.startsWith("000")) return;
       const key = digits.length === 10 ? `38${digits}` : digits;
       if(seen.has(key)) return;
       seen.add(key);
@@ -681,9 +827,11 @@ function extractRoutePhones(points){
 function buildPhoneSummaryHtml(points){
   const phones = extractRoutePhones(points);
   if(!phones.length) return "";
+  const phoneText = phones.map(phone => `${phone.number} - ${phone.pointLabel} ${phone.shop}`).join("\n");
   return `
     <div class="phone-summary">
       <div class="phone-summary-title">Телефони доставок</div>
+      <button class="secondary" type="button" data-copy-phones="${escapeAttr(phoneText)}" style="margin-bottom:10px">Копіювати телефони</button>
       <div class="phone-list">
         ${phones.map(phone => `
           <div class="phone-item">
@@ -692,6 +840,235 @@ function buildPhoneSummaryHtml(points){
           </div>
         `).join("")}
       </div>
+    </div>
+  `;
+}
+
+function formatMoney(value){
+  return new Intl.NumberFormat("uk-UA", {
+    minimumFractionDigits: value % 1 ? 2 : 0,
+    maximumFractionDigits: 2
+  }).format(value) + " грн";
+}
+
+function parseManualCost(value){
+  if(value === null || value === undefined || value === "") return null;
+  const num = Number(String(value).replace(/\s/g, "").replace(",", "."));
+  return Number.isFinite(num) && num >= 0 ? num : null;
+}
+
+function isWarrantyPoint(point){
+  const text = `${point?.shop || ""} ${point?.rawText || ""}`.toLowerCase();
+  if(/гарант|гарантійн|гарантий|гарантия|забір по гарантії|забор по гарант|обмін|обмен|заміна|замена/.test(text)) return true;
+  return /(забір|забрати|забор|забрать)/.test(text);
+}
+
+function isSpecialTariffRoute(route){
+  const text = `${route?.name || ""} ${route?.date || ""}`.toLowerCase();
+  if(/київ|киев|kyiv|kiev/.test(text)) return true;
+  if(/одеса|одесса|odesa|odessa/.test(text)) return true;
+  return (route?.points || []).some(point => /київ|киев|kyiv|kiev|одеса|одесса|odesa|odessa/.test(`${point.shop || ""} ${point.rawText || ""}`.toLowerCase()));
+}
+
+function quantityBefore(text, index){
+  const beforeAll = text.slice(0, index);
+  const before = beforeAll.slice(Math.max(beforeAll.lastIndexOf("\n"), beforeAll.lastIndexOf("\r")) + 1);
+  const numberMatch = before.match(/(?:^|[^\d])(\d{1,2})\s*(?:шт\.?|x|х)?\s*$/iu);
+  if(numberMatch){
+    const qty = Number(numberMatch[1]);
+    return qty >= 1 && qty <= 5 ? qty : 1;
+  }
+  if(/(?:^|\s)(дві|два|пара)\s*$/iu.test(before)) return 2;
+  if(/(?:^|\s)(одна|один|1)\s*$/iu.test(before)) return 1;
+  return 1;
+}
+
+function countApplianceMatches(text, patterns, price){
+  const items = [];
+  const seen = new Set();
+  patterns.forEach(pattern => {
+    for(const match of text.matchAll(pattern)){
+      const label = match[1] || match[0];
+      const index = (match.index || 0) + match[0].lastIndexOf(label);
+      const seenKey = `${index}`;
+      if(seen.has(seenKey)) continue;
+      seen.add(seenKey);
+      const qty = quantityBefore(text, index);
+      items.push({ qty, price, label, index, total: qty * price });
+    }
+  });
+  return items;
+}
+
+function appliancePattern(wordStart){
+  return new RegExp(`(?:^|[^\\p{L}\\d])(${wordStart}[\\p{L}\\d]*)`, "giu");
+}
+
+function calculateKyivPoint(point){
+  const text = `${point?.shop || ""} ${point?.rawText || ""}`.toLowerCase();
+  const sbsItems = countApplianceMatches(text, [/(?:^|[^\p{L}\d])(sbs|side[\s-]*by[\s-]*side|сбс|сайд(?:[\s-]*бай[\s-]*сайд)?)(?=$|[^\p{L}\d])/giu], 1700);
+  const comboPattern = /(?:^|[^\p{L}\d])((?:пральн|пралк|прал)[\p{L}\d]*[\s-]*(?:сушильн|сушк)[\p{L}\d]*|(?:сушильн|сушк)[\p{L}\d]*[\s-]*(?:пральн|пралк|прал)[\p{L}\d]*)(?=$|[^\p{L}\d])/giu;
+  const comboItems = countApplianceMatches(text, [comboPattern], 1000);
+  const textWithoutCombos = text.replace(comboPattern, " ");
+  const fridgeItems = countApplianceMatches(textWithoutCombos, [
+    appliancePattern("холод"),
+    appliancePattern("холодильник"),
+    appliancePattern("морозил"),
+    appliancePattern("морозильник"),
+    appliancePattern("морозильн")
+  ], 1200);
+  const basicItems = countApplianceMatches(textWithoutCombos, [
+    appliancePattern("прал"),
+    appliancePattern("пралк"),
+    appliancePattern("пральн"),
+    appliancePattern("стиралк"),
+    appliancePattern("посудомийк"),
+    appliancePattern("посудомойк"),
+    appliancePattern("духовк"),
+    appliancePattern("духов"),
+    appliancePattern("сушк"),
+    appliancePattern("сушильн"),
+    appliancePattern("плит"),
+    appliancePattern("комплект")
+  ], 1000);
+  const filteredFridgeItems = sbsItems.length
+    ? fridgeItems.filter(item => !sbsItems.some(sbs => Math.abs((sbs.index || 0) - (item.index || 0)) < 45))
+    : fridgeItems;
+  const items = [...sbsItems, ...comboItems, ...filteredFridgeItems, ...basicItems];
+  const value = items.reduce((sum, item) => sum + item.qty * item.price, 0);
+  const details = items.map(item => `${item.label}: ${item.qty} x ${formatMoney(item.price)} = ${formatMoney(item.total)}`);
+  return { value, itemCount: items.reduce((sum, item) => sum + item.qty, 0), details };
+}
+
+function calculateRouteDeliveryCost(route){
+  const isSpecialTariff = isSpecialTariffRoute(route);
+  const rows = [];
+  (route?.points || []).forEach(point => {
+    if(point?.skipCost){
+      rows.push({
+        value: 0,
+        note: "вручну не рахувати",
+        detail: "Вимкнено кнопкою Не рахувати",
+        pointLabel: point.pointLabel || "",
+        shop: point.shop || "Магазин"
+      });
+      return;
+    }
+    const manualCost = parseManualCost(point?.manualCost);
+    if(manualCost !== null){
+      rows.push({
+        value: manualCost,
+        note: "сума вручну",
+        detail: "Автоматичний підрахунок замінено ручною сумою",
+        pointLabel: point.pointLabel || "",
+        shop: point.shop || "Магазин"
+      });
+      return;
+    }
+    if(String(point?.status || "").toLowerCase().includes("перенес")){
+      rows.push({
+        value: 0,
+        note: "перенесено не рахується",
+        detail: "Статус точки Перенесено",
+        pointLabel: point.pointLabel || "",
+        shop: point.shop || "Магазин"
+      });
+      return;
+    }
+    if(isWarrantyPoint(point)){
+      rows.push({
+        value: 0,
+        note: "гарантія/обмін/заміна не рахується",
+        detail: "У тексті знайдено гарантію, забір, обмін або заміну",
+        pointLabel: point.pointLabel || "",
+        shop: point.shop || "Магазин"
+      });
+      return;
+    }
+    if(isSpecialTariff){
+      const result = calculateKyivPoint(point);
+      if(result.value > 0){
+        rows.push({
+          value: result.value,
+          note: `${result.itemCount} од. техніки`,
+          detail: result.details.join("; "),
+          pointLabel: point.pointLabel || "",
+          shop: point.shop || "Магазин"
+        });
+      }
+      return;
+    }
+    rows.push({
+      value: 700,
+      note: "1 точка",
+      detail: "Звичайний рейс: 700 грн за точку",
+      pointLabel: point.pointLabel || "",
+      shop: point.shop || "Магазин"
+    });
+  });
+  return { isSpecialTariff, rows, total: rows.reduce((sum, item) => sum + item.value, 0) };
+}
+
+function buildMoneySummaryHtml(route){
+  const summary = calculateRouteDeliveryCost(route);
+  if(!summary.rows.length) return "";
+  return `
+    <div class="money-summary">
+      <div class="money-summary-title">Сума доставок · ${summary.isSpecialTariff ? "Київ/Одеса" : "звичайний рейс"}</div>
+      <div class="money-total">${escapeHtml(formatMoney(summary.total))}</div>
+      <div class="money-list">
+        ${summary.rows.map(item => `
+          <div class="money-item">
+            <div class="money-value">${escapeHtml(formatMoney(item.value))}</div>
+            <div class="money-point">${escapeHtml(item.pointLabel)} · ${escapeHtml(item.shop)} · ${escapeHtml(item.note)}</div>
+            ${item.detail ? `<div class="money-detail">${escapeHtml(item.detail)}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function buildStatusSummaryHtml(points){
+  const counts = { loaded: 0, delivered: 0, postponed: 0 };
+  (points || []).forEach(point => {
+    const status = String(point.status || "");
+    if(status.includes("Доставлено")) counts.delivered++;
+    else if(status.includes("Перенесено")) counts.postponed++;
+    else counts.loaded++;
+  });
+  return `
+    <div class="status-summary">
+      <div class="status-summary-title">Підсумок статусів</div>
+      <div class="status-pills">
+        <span class="status-pill loaded">Загружено: ${counts.loaded}</span>
+        <span class="status-pill delivered">Доставлено: ${counts.delivered}</span>
+        <span class="status-pill postponed">Перенесено: ${counts.postponed}</span>
+      </div>
+    </div>
+  `;
+}
+
+function routeProblemMessages(route){
+  const points = route?.points || [];
+  const special = isSpecialTariffRoute(route);
+  const messages = [];
+  points.forEach(point => {
+    const label = point.pointLabel || "Точка";
+    if(!extractRoutePhones([point]).length) messages.push(`${label}: не знайдено телефону`);
+    const exempt = point.skipCost || parseManualCost(point.manualCost) !== null || String(point.status || "").toLowerCase().includes("перенес") || isWarrantyPoint(point);
+    if(special && !exempt && calculateKyivPoint(point).value <= 0) messages.push(`${label}: не знайдено техніки для підрахунку`);
+  });
+  return messages;
+}
+
+function buildProblemSummaryHtml(route){
+  const messages = routeProblemMessages(route);
+  if(!messages.length) return "";
+  return `
+    <div class="problem-summary">
+      <div class="problem-summary-title">Перевірити точки</div>
+      ${messages.map(message => `<div class="problem-item">${escapeHtml(message)}</div>`).join("")}
     </div>
   `;
 }
@@ -718,6 +1095,24 @@ function clearColor(targetId){
   const editor = document.getElementById(targetId);
   editor.focus();
   document.execCommand("removeFormat", false, null);
+}
+
+function appendHistory(route, message){
+  const history = Array.isArray(route?.history) ? route.history.slice(-39) : [];
+  history.push({ at: Date.now(), message });
+  return history;
+}
+
+function formatHistoryTime(value){
+  try{
+    return new Date(value).toLocaleString("uk-UA", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
+  }catch(e){
+    return "";
+  }
+}
+
+function noteHtml(point){
+  return point?.driverNote ? `<div class="point-note">${escapeHtml(point.driverNote)}</div>` : "";
 }
 
 document.querySelectorAll(".rich-toolbar").forEach(toolbar => {
@@ -767,15 +1162,106 @@ document.getElementById("savePointEditBtn").addEventListener("click", () => {
   closePointEditor();
 });
 
+function openCostEditor(routeId, point){
+  editingCostPoint = { routeId, pointId: point.id };
+  const input = document.getElementById("costEditInput");
+  input.value = point.manualCost === undefined || point.manualCost === null ? "" : String(point.manualCost);
+  document.getElementById("costEditModal").classList.remove("hidden");
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 0);
+}
+
+function closeCostEditor(){
+  editingCostPoint = null;
+  document.getElementById("costEditModal").classList.add("hidden");
+  document.getElementById("costEditInput").value = "";
+}
+
+function saveCostEditor(){
+  if(!editingCostPoint) return;
+  const clean = document.getElementById("costEditInput").value.trim();
+  if(clean === ""){
+    updatePoint(editingCostPoint.routeId, editingCostPoint.pointId, {manualCost: null});
+    closeCostEditor();
+    return;
+  }
+  const value = parseManualCost(clean);
+  if(value === null) return showNotice("Введи суму числом, наприклад 1200","warn");
+  updatePoint(editingCostPoint.routeId, editingCostPoint.pointId, {manualCost: value, skipCost: false});
+  closeCostEditor();
+}
+
+document.getElementById("cancelCostEditBtn").addEventListener("click", closeCostEditor);
+document.getElementById("saveCostEditBtn").addEventListener("click", saveCostEditor);
+document.getElementById("autoCostBtn").addEventListener("click", () => {
+  if(!editingCostPoint) return;
+  updatePoint(editingCostPoint.routeId, editingCostPoint.pointId, {manualCost: null});
+  closeCostEditor();
+});
+document.getElementById("costEditModal").addEventListener("click", event => {
+  if(event.target.id === "costEditModal") closeCostEditor();
+});
+document.getElementById("costEditInput").addEventListener("keydown", event => {
+  if(event.key === "Enter") saveCostEditor();
+  if(event.key === "Escape") closeCostEditor();
+});
+
+function openNoteEditor(routeId, point){
+  editingNotePoint = { routeId, pointId: point.id };
+  const input = document.getElementById("noteEditInput");
+  input.value = point.driverNote || "";
+  document.getElementById("noteEditModal").classList.remove("hidden");
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeNoteEditor(){
+  editingNotePoint = null;
+  document.getElementById("noteEditModal").classList.add("hidden");
+  document.getElementById("noteEditInput").value = "";
+}
+
+function saveNoteEditor(){
+  if(!editingNotePoint) return;
+  const note = document.getElementById("noteEditInput").value.trim();
+  updatePoint(editingNotePoint.routeId, editingNotePoint.pointId, {driverNote: note}, note ? "Оновлено примітку для водія" : "Очищено примітку для водія");
+  closeNoteEditor();
+}
+
+document.getElementById("cancelNoteEditBtn").addEventListener("click", closeNoteEditor);
+document.getElementById("saveNoteEditBtn").addEventListener("click", saveNoteEditor);
+document.getElementById("clearNoteBtn").addEventListener("click", () => {
+  if(!editingNotePoint) return;
+  updatePoint(editingNotePoint.routeId, editingNotePoint.pointId, {driverNote: ""}, "Очищено примітку для водія");
+  closeNoteEditor();
+});
+document.getElementById("noteEditModal").addEventListener("click", event => {
+  if(event.target.id === "noteEditModal") closeNoteEditor();
+});
+
+document.addEventListener("click", async event => {
+  const btn = event.target.closest("[data-copy-phones]");
+  if(!btn) return;
+  try{
+    await navigator.clipboard.writeText(btn.getAttribute("data-copy-phones") || "");
+    showNotice("Телефони скопійовано","ok");
+  }catch(e){
+    showNotice("Не вдалося скопіювати телефони","err");
+  }
+});
+
 function buildDriverCardsHtml(route){
   const points = route?.points || [];
   if(!points.length) return '<div class="empty">У цьому маршруті ще немає точок.</div>';
   return points.map(point => `
-    <div class="driver-card${point.fromFirm ? " firm" : ""}">
+    <div class="driver-card${point.fromFirm ? " firm" : ""}${point.important ? " important" : ""}">
       <div class="point">${point.pointLabel}</div>
       <div class="shop">${escapeHtml(point.shop || "Магазин")}</div>
+      ${point.important ? '<div class="important-flag">ВАЖЛИВО</div>' : ''}
       ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
       <div class="raw">${richPointHtml(point)}</div>
+      ${noteHtml(point)}
       <div class="status-badge ${badgeClass(point.status)}">Статус: ${escapeHtml(point.status)}</div>
       <div class="driver-actions" style="margin-top:14px">
         <button class="green">Доставлено</button>
@@ -799,6 +1285,9 @@ function renderPrintRoute(routeId){
       <div><b>Водій:</b> ${escapeHtml(driverNameById(route.driverId))}</div>
     </div>
     ${buildDriverCardsHtml(route)}
+    ${buildStatusSummaryHtml(route.points || [])}
+    ${buildProblemSummaryHtml(route)}
+    ${buildMoneySummaryHtml(route)}
     ${buildPhoneSummaryHtml(route.points || [])}
   `;
   return true;
@@ -814,12 +1303,12 @@ function printCurrentRoute(){
 document.getElementById("printRouteBtn").addEventListener("click", printCurrentRoute);
 
 
-async function updatePoint(routeId, pointId, changes){
+async function updatePoint(routeId, pointId, changes, historyMessage="Оновлено точку"){
   const route = routes[routeId];
   if(!route) return;
   const points = (route.points || []).map(p => p.id === pointId ? {...p, ...changes} : p)
     .map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
-  await update(ref(db, "routes/" + routeId), { points });
+  await update(ref(db, "routes/" + routeId), { points, history: appendHistory(route, historyMessage) });
 }
 
 async function deletePoint(routeId, pointId){
@@ -827,12 +1316,36 @@ async function deletePoint(routeId, pointId){
   if(!route) return;
   const points = (route.points || []).filter(p => p.id !== pointId)
     .map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
-  await update(ref(db, "routes/" + routeId), { points });
+  await update(ref(db, "routes/" + routeId), { points, history: appendHistory(route, "Видалено точку") });
+}
+
+async function movePoint(routeId, pointId, direction){
+  const route = routes[routeId];
+  if(!route) return;
+  const points = [...(route.points || [])];
+  const index = points.findIndex(p => p.id === pointId);
+  const nextIndex = index + direction;
+  if(index < 0 || nextIndex < 0 || nextIndex >= points.length) return;
+  const [point] = points.splice(index, 1);
+  points.splice(nextIndex, 0, point);
+  const normalized = points.map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
+  await update(ref(db, "routes/" + routeId), { points: normalized, history: appendHistory(route, "Змінено порядок точок") });
+}
+
+function buildChangeLogHtml(route){
+  const history = Array.isArray(route?.history) ? route.history.slice(-8).reverse() : [];
+  if(!history.length) return "";
+  return `
+    <div class="change-log">
+      <div class="change-log-title">Лог змін</div>
+      ${history.map(item => `<div class="change-log-item">${escapeHtml(formatHistoryTime(item.at))} · ${escapeHtml(item.message || "")}</div>`).join("")}
+    </div>
+  `;
 }
 
 function renderRouteList(){
   const wrap = document.getElementById("routeList");
-  const arr = routeArray();
+  const arr = routeArray().filter(route => showArchivedRoutes || !route.archived);
   if(!arr.length) {
     wrap.innerHTML = '<div class="empty">Ще немає маршрутів</div>';
     return;
@@ -840,9 +1353,9 @@ function renderRouteList(){
   wrap.innerHTML = "";
   arr.forEach(route => {
     const div = document.createElement("div");
-    div.className = "route-item" + (route.id === currentRouteId ? " active" : "");
+    div.className = "route-item" + (route.id === currentRouteId ? " active" : "") + (route.archived ? " archived-route" : "");
     div.innerHTML = `<div class="route-title">${route.name || "Без назви"}</div>
-      <div class="route-meta">${route.date || "—"} · ${driverNameById(route.driverId)} · ID: ${route.id}</div>`;
+      <div class="route-meta">${route.date || "—"} · ${driverNameById(route.driverId)} · ${route.archived ? "Завершено · " : ""}ID: ${route.id}</div>`;
     div.onclick = ()=>{ currentRouteId = route.id; renderRouteList(); renderCurrentRoute(); };
     wrap.appendChild(div);
   });
@@ -854,6 +1367,7 @@ function renderCurrentRoute(){
   document.getElementById("currentRouteName").textContent = route?.name || "—";
   document.getElementById("currentRouteDate").textContent = route?.date || "—";
   document.getElementById("currentRouteDriver").textContent = route ? driverNameById(route.driverId) : "—";
+  document.getElementById("archiveRouteBtn").textContent = route?.archived ? "Повернути маршрут" : "Завершити маршрут";
 
   const wrap = document.getElementById("dispatcherRouteContent");
   if(!route) {
@@ -868,30 +1382,39 @@ function renderCurrentRoute(){
   const table = document.createElement("table");
   table.innerHTML = '<colgroup><col style="width:130px"><col></colgroup>';
   const tbody = document.createElement("tbody");
+  const search = searchableText(routeSearchTerm);
 
   points.forEach(point => {
+    const isMatch = search && searchableText(`${point.pointLabel || ""} ${point.shop || ""} ${point.rawText || ""} ${point.status || ""}`).includes(search);
     const tr1 = document.createElement("tr");
     if(point.fromFirm) tr1.className = "row-firm";
+    if(point.important) tr1.className = `${tr1.className} row-important`.trim();
+    if(isMatch) tr1.className = `${tr1.className} search-match`.trim();
     const leftTd = document.createElement("td");
     leftTd.className = "left-col";
     leftTd.rowSpan = 3;
     leftTd.textContent = point.pointLabel;
     const shopTd = document.createElement("td");
     shopTd.className = "shop";
-    shopTd.textContent = point.shop || "Магазин";
+    shopTd.innerHTML = `${escapeHtml(point.shop || "Магазин")}${point.important ? '<div class="important-flag">ВАЖЛИВО</div>' : ''}`;
     tr1.append(leftTd, shopTd);
 
     const tr2 = document.createElement("tr");
     if(point.fromFirm) tr2.className = "row-firm";
+    if(point.important) tr2.className = `${tr2.className} row-important`.trim();
+    if(isMatch) tr2.className = `${tr2.className} search-match`.trim();
     const rawTd = document.createElement("td");
     const rawDiv = document.createElement("div");
     rawDiv.className = "raw";
     rawDiv.innerHTML = richPointHtml(point);
     rawTd.appendChild(rawDiv);
+    if(point.driverNote) rawTd.insertAdjacentHTML("beforeend", noteHtml(point));
     tr2.appendChild(rawTd);
 
     const tr3 = document.createElement("tr");
     if(point.fromFirm) tr3.className = "row-firm";
+    if(point.important) tr3.className = `${tr3.className} row-important`.trim();
+    if(isMatch) tr3.className = `${tr3.className} search-match`.trim();
     const statusTd = document.createElement("td");
     const row = document.createElement("div");
     row.className = "status-row";
@@ -909,14 +1432,20 @@ function renderCurrentRoute(){
       return b;
     }
 
-    btnWrap.appendChild(makeBtn("Загружено","blue",()=>updatePoint(currentRouteId, point.id, {status:"Загружено"})));
-    btnWrap.appendChild(makeBtn("Доставлено","green",()=>updatePoint(currentRouteId, point.id, {status:"Доставлено"})));
-    btnWrap.appendChild(makeBtn("Перенесено","yellow",()=>updatePoint(currentRouteId, point.id, {status:"Перенесено"})));
+    btnWrap.appendChild(makeBtn("Вгору","secondary",()=>movePoint(currentRouteId, point.id, -1)));
+    btnWrap.appendChild(makeBtn("Вниз","secondary",()=>movePoint(currentRouteId, point.id, 1)));
+    btnWrap.appendChild(makeBtn("Загружено","blue",()=>updatePoint(currentRouteId, point.id, {status:"Загружено"}, "Статус: Загружено")));
+    btnWrap.appendChild(makeBtn("Доставлено","green",()=>updatePoint(currentRouteId, point.id, {status:"Доставлено"}, "Статус: Доставлено")));
+    btnWrap.appendChild(makeBtn("Перенесено","yellow",()=>updatePoint(currentRouteId, point.id, {status:"Перенесено"}, "Статус: Перенесено")));
     btnWrap.appendChild(makeBtn("Вставити після","blue",()=>insertPointAfter(currentRouteId, point.id)));
-    btnWrap.appendChild(makeBtn(point.fromFirm ? "Фірма ✔":"Фірма", point.fromFirm ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {fromFirm: !point.fromFirm})));
+    btnWrap.appendChild(makeBtn(point.fromFirm ? "Фірма ✔":"Фірма", point.fromFirm ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {fromFirm: !point.fromFirm}, "Змінено позначку Фірма")));
+    btnWrap.appendChild(makeBtn(point.important ? "Важливо ✔":"Важливо", point.important ? "yellow":"secondary", ()=>updatePoint(currentRouteId, point.id, {important: !point.important}, "Змінено позначку Важливо")));
+    btnWrap.appendChild(makeBtn(point.skipCost ? "Рахувати":"Не рахувати", point.skipCost ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {skipCost: !point.skipCost}, "Змінено правило підрахунку")));
+    btnWrap.appendChild(makeBtn(point.manualCost !== undefined && point.manualCost !== null ? `Сума: ${formatMoney(parseManualCost(point.manualCost) || 0)}`:"Сума", point.manualCost !== undefined && point.manualCost !== null ? "green":"secondary", ()=>openCostEditor(currentRouteId, point)));
+    btnWrap.appendChild(makeBtn(point.driverNote ? "Примітка ✔":"Примітка", point.driverNote ? "blue":"secondary", ()=>openNoteEditor(currentRouteId, point)));
     btnWrap.appendChild(makeBtn("Магазин","secondary",()=>{
       const next = prompt("Назва магазину", point.shop || "");
-      if(next !== null && next.trim()) updatePoint(currentRouteId, point.id, {shop: next.trim()});
+      if(next !== null && next.trim()) updatePoint(currentRouteId, point.id, {shop: next.trim()}, "Змінено магазин");
     }));
     btnWrap.appendChild(makeBtn("Редагувати","secondary",()=>{
       openPointEditor(currentRouteId, point);
@@ -931,7 +1460,11 @@ function renderCurrentRoute(){
 
   table.appendChild(tbody);
   wrap.innerHTML = "";
+  wrap.insertAdjacentHTML("beforeend", buildChangeLogHtml(route));
   wrap.appendChild(table);
+  wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
+  wrap.insertAdjacentHTML("beforeend", buildProblemSummaryHtml(route));
+  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
@@ -948,7 +1481,7 @@ function renderDriverRouteList(){
     wrap.innerHTML = '<div class="empty">Вибери водія</div>';
     return;
   }
-  const arr = routeArray().filter(r => String(r.driverId) === String(currentDriverMode));
+  const arr = routeArray().filter(r => !r.archived && String(r.driverId) === String(currentDriverMode));
   if(!arr.length) {
     wrap.innerHTML = '<div class="empty">У цього водія ще немає маршрутів</div>';
     return;
@@ -983,14 +1516,18 @@ function renderDriverCurrentRoute(){
   wrap.innerHTML = "";
   points.forEach(point => {
     const card = document.createElement("div");
-    card.className = "driver-card" + (point.fromFirm ? " firm" : "");
+    card.className = "driver-card" + (point.fromFirm ? " firm" : "") + (point.important ? " important" : "");
     card.innerHTML = `
       <div class="point">${point.pointLabel}</div>
       <div class="shop">${escapeHtml(point.shop || "Магазин")}</div>
+      ${point.important ? '<div class="important-flag">ВАЖЛИВО</div>' : ''}
       ${point.fromFirm ? '<div class="firm-badge">ФІРМА</div>' : ''}
       <div class="raw">${richPointHtml(point)}</div>
+      ${noteHtml(point)}
       <div class="status-badge ${badgeClass(point.status)}">Статус: ${point.status}</div>
       <div class="driver-actions" style="margin-top:14px">
+        <button class="secondary" data-action="up" data-point="${point.id}">Вгору</button>
+        <button class="secondary" data-action="down" data-point="${point.id}">Вниз</button>
         <button class="green" data-action="delivered" data-point="${point.id}">Доставлено</button>
         <button class="yellow" data-action="postponed" data-point="${point.id}">Перенесено</button>
       </div>
@@ -1001,7 +1538,9 @@ function renderDriverCurrentRoute(){
     btn.onclick = ()=>{
       const pointId = Number(btn.getAttribute("data-point"));
       const action = btn.getAttribute("data-action");
-      if(action === "delivered") updatePoint(selectedDriverRouteId, pointId, {status:"Доставлено"});
+      if(action === "up") movePoint(selectedDriverRouteId, pointId, -1);
+      if(action === "down") movePoint(selectedDriverRouteId, pointId, 1);
+      if(action === "delivered") updatePoint(selectedDriverRouteId, pointId, {status:"Доставлено"}, "Водій поставив статус Доставлено");
       if(action === "postponed"){
   const note = prompt("Причина переносу / примітка:", "");
   if(note !== null){
@@ -1011,11 +1550,13 @@ function renderDriverCurrentRoute(){
       status:"Перенесено",
       rawText: (point?.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + (note || ""),
       rawHtml: ""
-    });
+    }, "Водій поставив статус Перенесено");
   }
 }
     };
   });
+  wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
+  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
