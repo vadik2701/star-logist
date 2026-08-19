@@ -12,7 +12,7 @@
 <style>
 :root{
   --bg:#f3f4f6; --panel:#fff; --border:#d1d5db; --text:#111827; --muted:#6b7280;
-  --blue:#3b82f6; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --firm:#dcfce7;
+  --blue:#3b82f6; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --violet:#8b5cf6; --firm:#dcfce7;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -43,6 +43,7 @@ button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size
 .blue{background:var(--blue);color:#fff}
 .green{background:var(--green);color:#fff}
 .yellow{background:var(--yellow);color:#111827}
+.waiting-btn{background:var(--violet);color:#fff}
 .danger{background:var(--red);color:#fff}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
 .notice{margin-top:10px;padding:12px 14px;border-radius:12px;font-weight:700}
@@ -67,6 +68,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .raw{white-space:pre-wrap;font-size:18px;min-height:170px}
 .row-firm td{background:var(--firm)}
 .status-badge{display:inline-block;font-size:16px;padding:10px 14px;border-radius:12px;font-weight:700}
+.badge-waiting{background:#ede9fe;color:#6d28d9}
 .badge-loaded{background:#dbeafe;color:#1d4ed8}
 .badge-delivered{background:#dcfce7;color:#15803d}
 .badge-postponed{background:#fef3c7;color:#a16207}
@@ -90,6 +92,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .status-summary-title,.problem-summary-title{font-size:18px;font-weight:800;margin-bottom:10px}
 .status-pills{display:flex;gap:8px;flex-wrap:wrap}
 .status-pill{display:inline-block;border-radius:999px;padding:9px 12px;font-weight:800;font-size:14px}
+.status-pill.waiting{background:#ede9fe;color:#6d28d9}
 .status-pill.loaded{background:#dbeafe;color:#1d4ed8}
 .status-pill.delivered{background:#dcfce7;color:#15803d}
 .status-pill.postponed{background:#fef3c7;color:#a16207}
@@ -101,6 +104,14 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .row-important td{background:#fef3c7!important}
 .important-flag{display:inline-block;background:#dc2626;color:#fff;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px;margin:0 0 8px}
 .point-note{margin-top:10px;padding:10px 12px;border-left:5px solid #2563eb;background:#eff6ff;border-radius:10px;color:#1e3a8a;font-weight:700;white-space:pre-wrap}
+.driver-report{margin-top:14px;padding:14px;border:2px solid #a78bfa;border-radius:16px;background:#f5f3ff}
+.driver-report-title{font-size:19px;font-weight:800;color:#5b21b6;margin-bottom:10px}
+.driver-report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.driver-report-item{padding:12px;border:1px solid #c4b5fd;border-radius:12px;background:#fff}
+.driver-report-label{font-size:13px;font-weight:800;color:#6d28d9;margin-bottom:5px;text-transform:uppercase}
+.driver-report-text{font-size:16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.driver-report-form{display:grid;gap:12px}
+.driver-report-form label{display:grid;gap:6px;font-weight:700}
 .change-log{margin-bottom:14px;background:#fff;border:1px solid #d1d5db;border-radius:16px;padding:14px}
 .change-log-title{font-size:18px;font-weight:800;margin-bottom:8px}
 .change-log-item{font-size:13px;color:#4b5563;margin-top:5px}
@@ -250,7 +261,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
       <div>
         <div class="brand">STAR Logist</div>
         <h1>Маршрути</h1>
-        <div class="sub">7 водіїв, назви маршрутів, список усіх маршрутів і окремий режим водія.</div>
+        <div class="sub">Водії, назви маршрутів, список усіх маршрутів і окремий режим водія.</div>
       </div>
       <div class="tabs">
         <button class="tab primary active" id="dispatcherTab">Диспетчер</button>
@@ -280,7 +291,11 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
           <div class="panel">
             <h3 style="margin-top:0">Водії</h3>
             <div id="driversEditor" class="driver-grid"></div>
-            <button class="secondary" id="saveDriversBtn" style="margin-top:10px">Зберегти водіїв</button>
+            <div class="toolbar" style="margin-top:10px">
+              <button class="blue" id="addDriverBtn">Додати водія</button>
+              <button class="secondary" id="saveDriversBtn">Зберегти водіїв</button>
+            </div>
+            <div class="small" style="margin-top:8px">Після додавання або зміни імені натисни “Зберегти водіїв”.</div>
           </div>
 
           <div class="panel">
@@ -326,6 +341,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <div id="newPointEditor" class="rich-editor" contenteditable="true" data-placeholder="Встав текст з Viber"></div>
             <div class="toolbar" style="margin-top:12px">
               <button class="primary" id="addPointBtn">Додати точку</button>
+              <button class="green" id="addFirmPointBtn">З фірми</button>
             </div>
           </div>
 
@@ -361,9 +377,25 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <div class="toolbar" style="margin-top:12px">
               <button class="primary" id="driverAddPointBtn">Додати точку</button>
             </div>
-            <div class="small" style="margin-top:8px">Точка додається в кінець вибраного маршруту зі статусом “Загружено”.</div>
+            <div class="small" style="margin-top:8px">Точка додається в кінець вибраного маршруту зі статусом “Очікує”.</div>
           </div>
           <div id="driverRouteContent"></div>
+          <div id="driverReportPanel" class="panel hidden">
+            <h3 style="margin-top:0">Примітки та витрати водія</h3>
+            <div class="driver-report-form">
+              <label>
+                Примітки
+                <textarea id="driverRouteNotes" placeholder="Напиши примітки до маршруту"></textarea>
+              </label>
+              <label>
+                Витрати
+                <input id="driverRouteExpenses" placeholder="Наприклад: пальне 1200 грн, парковка 100 грн" />
+              </label>
+              <div class="toolbar">
+                <button class="primary" id="saveDriverReportBtn">Зберегти примітки та витрати</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -515,6 +547,7 @@ document.getElementById("driverTab").addEventListener("click", ()=>setMode("driv
 function badgeClass(status){
   if(status === "Доставлено") return "badge-delivered";
   if(status === "Перенесено") return "badge-postponed";
+  if(status === "Очікує" || !status) return "badge-waiting";
   return "badge-loaded";
 }
 
@@ -532,6 +565,18 @@ function renderDriversEditor(){
     input.dataset.index = i;
     wrap.appendChild(input);
   });
+}
+
+function addDriver(){
+  const inputs = [...document.querySelectorAll("#driversEditor input")];
+  drivers = inputs.map((input, index) => input.value.trim() || `Водій ${index+1}`);
+  drivers.push(`Водій ${drivers.length + 1}`);
+  renderDriversEditor();
+  const newInput = document.querySelector("#driversEditor input:last-child");
+  if(newInput){
+    newInput.focus();
+    newInput.select();
+  }
 }
 
 function renderDriverSelects(){
@@ -559,6 +604,7 @@ async function saveDrivers(){
 }
 
 document.getElementById("saveDriversBtn").addEventListener("click", saveDrivers);
+document.getElementById("addDriverBtn").addEventListener("click", addDriver);
 
 function listenDrivers(){
   onValue(ref(db, "settings/drivers"), snap => {
@@ -667,7 +713,7 @@ document.getElementById("routeSearchInput").addEventListener("input", e => {
 });
 
 
-async function addPoint(){
+async function addPoint(fromFirm = false){
   if(!currentRouteId) return showNotice("Спочатку відкрий або створи маршрут","warn");
   const draft = getNewPointDraft();
   const text = draft.text;
@@ -680,14 +726,16 @@ async function addPoint(){
     shop: "Магазин",
     rawText: text,
     rawHtml: draft.html,
-    status: "Загружено",
-    fromFirm: false
+    status: "Очікує",
+    fromFirm: Boolean(fromFirm)
   });
-  await update(ref(db, "routes/" + currentRouteId), { points, history: appendHistory(route, "Додано точку") });
+  await update(ref(db, "routes/" + currentRouteId), { points, history: appendHistory(route, fromFirm ? "Додано точку з фірми" : "Додано точку") });
   clearNewPointDraft();
+  showNotice(fromFirm ? "Точку з фірми додано" : "Точку додано","ok");
 }
 
-document.getElementById("addPointBtn").addEventListener("click", addPoint);
+document.getElementById("addPointBtn").addEventListener("click", () => addPoint(false));
+document.getElementById("addFirmPointBtn").addEventListener("click", () => addPoint(true));
 
 async function addDriverPoint(){
   if(!selectedDriverRouteId) return showNotice("Спочатку вибери маршрут","warn");
@@ -703,7 +751,7 @@ async function addDriverPoint(){
     shop: "Магазин",
     rawText: text,
     rawHtml: "",
-    status: "Загружено",
+    status: "Очікує",
     fromFirm: false,
     addedByDriver: true
   });
@@ -729,7 +777,7 @@ async function insertPointAfter(routeId, afterPointId){
     shop: "Магазин",
     rawText: sourceText,
     rawHtml: draft.html,
-    status: "Загружено",
+    status: "Очікує",
     fromFirm: false
   };
   const points = [...oldPoints];
@@ -1046,17 +1094,19 @@ function buildMoneySummaryHtml(route){
 }
 
 function buildStatusSummaryHtml(points){
-  const counts = { loaded: 0, delivered: 0, postponed: 0 };
+  const counts = { waiting: 0, loaded: 0, delivered: 0, postponed: 0 };
   (points || []).forEach(point => {
     const status = String(point.status || "");
     if(status.includes("Доставлено")) counts.delivered++;
     else if(status.includes("Перенесено")) counts.postponed++;
+    else if(status.includes("Очікує") || !status) counts.waiting++;
     else counts.loaded++;
   });
   return `
     <div class="status-summary">
       <div class="status-summary-title">Підсумок статусів</div>
       <div class="status-pills">
+        <span class="status-pill waiting">Очікує: ${counts.waiting}</span>
         <span class="status-pill loaded">Загружено: ${counts.loaded}</span>
         <span class="status-pill delivered">Доставлено: ${counts.delivered}</span>
         <span class="status-pill postponed">Перенесено: ${counts.postponed}</span>
@@ -1129,6 +1179,22 @@ function formatHistoryTime(value){
 
 function noteHtml(point){
   return point?.driverNote ? `<div class="point-note">${escapeHtml(point.driverNote)}</div>` : "";
+}
+
+function buildDriverReportHtml(route){
+  const notes = String(route?.driverNotes || "").trim();
+  const expenses = String(route?.driverExpenses || "").trim();
+  if(!notes && !expenses) return "";
+  const updated = route?.driverReportUpdatedAt ? ` · ${escapeHtml(formatHistoryTime(route.driverReportUpdatedAt))}` : "";
+  return `
+    <div class="driver-report">
+      <div class="driver-report-title">Запис водія${updated}</div>
+      <div class="driver-report-grid">
+        ${notes ? `<div class="driver-report-item"><div class="driver-report-label">Примітки</div><div class="driver-report-text">${escapeHtml(notes)}</div></div>` : ""}
+        ${expenses ? `<div class="driver-report-item"><div class="driver-report-label">Витрати</div><div class="driver-report-text">${escapeHtml(expenses)}</div></div>` : ""}
+      </div>
+    </div>
+  `;
 }
 
 document.querySelectorAll(".rich-toolbar").forEach(toolbar => {
@@ -1450,6 +1516,7 @@ function renderCurrentRoute(){
 
     btnWrap.appendChild(makeBtn("Вгору","secondary",()=>movePoint(currentRouteId, point.id, -1)));
     btnWrap.appendChild(makeBtn("Вниз","secondary",()=>movePoint(currentRouteId, point.id, 1)));
+    btnWrap.appendChild(makeBtn("Очікує","waiting-btn",()=>updatePoint(currentRouteId, point.id, {status:"Очікує"}, "Статус: Очікує")));
     btnWrap.appendChild(makeBtn("Загружено","blue",()=>updatePoint(currentRouteId, point.id, {status:"Загружено"}, "Статус: Загружено")));
     btnWrap.appendChild(makeBtn("Доставлено","green",()=>updatePoint(currentRouteId, point.id, {status:"Доставлено"}, "Статус: Доставлено")));
     btnWrap.appendChild(makeBtn("Перенесено","yellow",()=>updatePoint(currentRouteId, point.id, {status:"Перенесено"}, "Статус: Перенесено")));
@@ -1478,6 +1545,7 @@ function renderCurrentRoute(){
   wrap.innerHTML = "";
   wrap.insertAdjacentHTML("beforeend", buildChangeLogHtml(route));
   wrap.appendChild(table);
+  wrap.insertAdjacentHTML("beforeend", buildDriverReportHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
   wrap.insertAdjacentHTML("beforeend", buildProblemSummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
@@ -1519,6 +1587,10 @@ function renderDriverCurrentRoute(){
   document.getElementById("driverRouteName").textContent = route?.name || "—";
   document.getElementById("driverRouteDate").textContent = route?.date || "—";
   document.getElementById("driverRouteDriver").textContent = route ? driverNameById(route.driverId) : "—";
+  const reportPanel = document.getElementById("driverReportPanel");
+  reportPanel.classList.toggle("hidden", !route);
+  document.getElementById("driverRouteNotes").value = route?.driverNotes || "";
+  document.getElementById("driverRouteExpenses").value = route?.driverExpenses || "";
   const wrap = document.getElementById("driverRouteContent");
   if(!route) {
     wrap.innerHTML = '<div class="empty">Вибери маршрут водія зліва.</div>';
@@ -1544,6 +1616,8 @@ function renderDriverCurrentRoute(){
       <div class="driver-actions" style="margin-top:14px">
         <button class="secondary" data-action="up" data-point="${point.id}">Вгору</button>
         <button class="secondary" data-action="down" data-point="${point.id}">Вниз</button>
+        <button class="waiting-btn" data-action="waiting" data-point="${point.id}">Очікує</button>
+        <button class="blue" data-action="loaded" data-point="${point.id}">Загружено</button>
         <button class="green" data-action="delivered" data-point="${point.id}">Доставлено</button>
         <button class="yellow" data-action="postponed" data-point="${point.id}">Перенесено</button>
       </div>
@@ -1556,6 +1630,8 @@ function renderDriverCurrentRoute(){
       const action = btn.getAttribute("data-action");
       if(action === "up") movePoint(selectedDriverRouteId, pointId, -1);
       if(action === "down") movePoint(selectedDriverRouteId, pointId, 1);
+      if(action === "waiting") updatePoint(selectedDriverRouteId, pointId, {status:"Очікує"}, "Водій поставив статус Очікує");
+      if(action === "loaded") updatePoint(selectedDriverRouteId, pointId, {status:"Загружено"}, "Водій поставив статус Загружено");
       if(action === "delivered") updatePoint(selectedDriverRouteId, pointId, {status:"Доставлено"}, "Водій поставив статус Доставлено");
       if(action === "postponed"){
   const note = prompt("Причина переносу / примітка:", "");
@@ -1575,6 +1651,23 @@ function renderDriverCurrentRoute(){
   wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
+
+async function saveDriverReport(){
+  if(!selectedDriverRouteId) return showNotice("Спочатку вибери маршрут","warn");
+  const route = routes[selectedDriverRouteId];
+  if(!route) return showNotice("Маршрут не знайдено","warn");
+  const driverNotes = document.getElementById("driverRouteNotes").value.trim();
+  const driverExpenses = document.getElementById("driverRouteExpenses").value.trim();
+  await update(ref(db, "routes/" + selectedDriverRouteId), {
+    driverNotes: driverNotes || null,
+    driverExpenses: driverExpenses || null,
+    driverReportUpdatedAt: Date.now(),
+    history: appendHistory(route, "Водій оновив примітки та витрати")
+  });
+  showNotice("Примітки та витрати збережено","ok");
+}
+
+document.getElementById("saveDriverReportBtn").addEventListener("click", saveDriverReport);
 
 listenDrivers();
 listenRoutes();
