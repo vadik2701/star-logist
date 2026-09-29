@@ -131,12 +131,45 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .edit-box{width:min(920px,100%);background:#fff;border-radius:18px;padding:16px;box-shadow:0 18px 45px rgba(0,0,0,.28)}
 .edit-title{font-size:22px;font-weight:700;margin:0 0 12px}
 .edit-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+.delivery-page{display:grid;gap:14px}
+.delivery-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.delivery-head h2{margin:0 0 6px}
+.delivery-controls{display:grid;grid-template-columns:minmax(240px,1fr) auto auto;gap:10px;align-items:center;margin-top:14px}
+.delivery-import{display:inline-flex;align-items:center;justify-content:center;border-radius:14px;padding:12px 18px;cursor:pointer;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap}
+.delivery-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin-top:12px}
+.delivery-tab{white-space:nowrap;background:#e5e7eb;color:#111827;padding:10px 14px}
+.delivery-tab.active{background:#111827;color:#fff;outline:3px solid #cbd5e1}
+.delivery-counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}
+.delivery-count-card{background:#002060;color:#fff;border-radius:14px;padding:14px;box-shadow:0 3px 12px rgba(0,32,96,.18)}
+.delivery-count-label{font-size:14px;opacity:.9;font-weight:700}
+.delivery-count-value{font-size:32px;font-weight:900;margin-top:4px}
+.delivery-count-detail{font-size:13px;opacity:.88;margin-top:4px}
+.delivery-board-title{font-size:22px;font-weight:800;margin-bottom:10px}
+.delivery-board-scroll{overflow:auto;border:1px solid #94a3b8;border-radius:12px;background:#94a3b8}
+.delivery-board-grid{display:grid;grid-template-columns:repeat(var(--delivery-columns),minmax(230px,1fr));min-width:calc(var(--delivery-columns) * 230px);gap:1px}
+.delivery-cell{position:relative;min-height:205px;padding:34px 12px 12px;border:0;border-radius:0;box-shadow:none;text-align:left;color:#111827;font-weight:500;line-height:1.38;white-space:pre-wrap;overflow:auto;background:#fff}
+.delivery-cell:hover{outline:4px solid #3b82f6;outline-offset:-4px;z-index:1}
+.delivery-cell.empty-cell{color:#9ca3af;font-style:italic}
+.delivery-cell-code{position:absolute;top:8px;left:10px;font-size:11px;font-weight:800;color:#475569;background:rgba(255,255,255,.82);padding:3px 6px;border-radius:999px}
+.delivery-route-badge{display:inline-block;margin-top:10px;border-radius:999px;background:#dcfce7;color:#166534;padding:5px 8px;font-size:11px;font-weight:800;font-style:normal}
+.delivery-search-results{display:grid;gap:8px}
+.delivery-search-result{width:100%;text-align:left;background:#fff;color:#111827;border:1px solid #cbd5e1;border-left:6px solid #3b82f6;box-shadow:none}
+.delivery-search-result:hover{background:#eff6ff}
+.delivery-color-palette{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.delivery-color-choice{width:38px;height:38px;min-width:38px;padding:0;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #94a3b8}
+.delivery-color-choice.active{box-shadow:0 0 0 4px #111827}
+.delivery-route-box{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;align-items:center;margin-top:16px;padding:14px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff}
+.delivery-help{max-width:760px;line-height:1.45}
 @media (max-width: 900px){
   .layout{grid-template-columns:1fr}
+  .delivery-controls{grid-template-columns:1fr 1fr}
+  .delivery-controls input{grid-column:1/-1}
 }
 @media (max-width: 640px){
   .driver-actions{grid-template-columns:1fr}
   .raw{font-size:16px}
+  .delivery-controls,.delivery-route-box{grid-template-columns:1fr}
+  .delivery-cell{min-height:175px}
 }
 
 .print-route{display:none}
@@ -260,11 +293,12 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
     <div class="topbar">
       <div>
         <div class="brand">STAR Logist</div>
-        <h1>Маршрути</h1>
-        <div class="sub">Водії, назви маршрутів, список усіх маршрутів і окремий режим водія.</div>
+        <h1>Маршрути й доставки</h1>
+        <div class="sub">Маршрути, водії, дошка доставок, пошук і окремий режим водія.</div>
       </div>
       <div class="tabs">
         <button class="tab primary active" id="dispatcherTab">Диспетчер</button>
+        <button class="tab secondary" id="deliveriesTab">Доставки</button>
         <button class="tab secondary" id="driverTab">Водій</button>
         <button class="danger logout" id="logoutBtn">Вийти</button>
       </div>
@@ -399,6 +433,39 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
         </div>
       </div>
     </div>
+
+    <div id="deliveriesView" class="hidden">
+      <div class="delivery-page">
+        <div class="panel">
+          <div class="delivery-head">
+            <div>
+              <h2>Дошка доставок</h2>
+              <div class="small delivery-help">Вкладки відповідають аркушам Excel. Натисни на клітинку, щоб записати доставку, змінити її колір або додати доставку в активний маршрут.</div>
+            </div>
+          </div>
+          <div class="delivery-controls">
+            <input id="deliverySearchInput" placeholder="Пошук у всіх доставках: місто, телефон, ім’я, товар..." />
+            <label class="blue delivery-import" for="deliveryExcelInput">Імпортувати Excel</label>
+            <input id="deliveryExcelInput" class="hidden" type="file" accept=".xlsx,.xls,.xlsm" />
+            <button class="secondary" id="addDeliveryRowBtn">Додати ряд</button>
+          </div>
+          <div id="deliveryCounts" class="delivery-counts"></div>
+          <div id="deliveryTabs" class="delivery-tabs"></div>
+        </div>
+
+        <div id="deliverySearchPanel" class="panel hidden">
+          <h3 style="margin-top:0">Знайдені доставки</h3>
+          <div id="deliverySearchResults" class="delivery-search-results"></div>
+        </div>
+
+        <div class="panel">
+          <div id="deliveryBoardTitle" class="delivery-board-title">—</div>
+          <div class="delivery-board-scroll">
+            <div id="deliveryBoardGrid" class="delivery-board-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -448,6 +515,35 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   </div>
 </div>
 
+<div id="deliveryEditModal" class="edit-modal hidden">
+  <div class="edit-box">
+    <div id="deliveryEditTitle" class="edit-title">Редагувати доставку</div>
+    <textarea id="deliveryEditText" placeholder="Встав або напиши текст доставки"></textarea>
+    <div class="small" style="margin-top:10px">Колір клітинки</div>
+    <div id="deliveryColorPalette" class="delivery-color-palette">
+      <button class="delivery-color-choice" type="button" data-delivery-color="white" title="Білий" style="background:#ffffff"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="yellow" title="Жовтий" style="background:#fff59d"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="green" title="Зелений" style="background:#bbf7d0"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="purple" title="Фіолетовий" style="background:#e9d5ff"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="red" title="Червоний" style="background:#fecaca"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="blue" title="Синій" style="background:#bfdbfe"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="orange" title="Помаранчевий" style="background:#fed7aa"></button>
+      <button class="delivery-color-choice" type="button" data-delivery-color="gray" title="Сірий" style="background:#e5e7eb"></button>
+    </div>
+    <div class="delivery-route-box">
+      <select id="deliveryRouteSelect"></select>
+      <button class="green" id="addDeliveryToRouteBtn">Додати в маршрут</button>
+    </div>
+    <div class="small" style="margin-top:8px">У маршрут потрапить текст цієї клітинки зі статусом “Очікує”.</div>
+    <div class="edit-actions">
+      <button class="danger" id="clearDeliveryCellBtn">Очистити клітинку</button>
+      <button class="secondary" id="cancelDeliveryEditBtn">Скасувати</button>
+      <button class="primary" id="saveDeliveryEditBtn">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
@@ -481,6 +577,36 @@ let showArchivedRoutes = false;
 let routeSearchTerm = "";
 let currentUserRole = localStorage.getItem(ROLE_KEY) || "";
 
+const DELIVERY_BOARD_TEMPLATES = [
+  { id:"ukraina", name:"Україна", columns:10, rows:4, rowColors:["white","white","white","white"] },
+  { id:"rivne", name:"Рівне", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"lviv", name:"Львів", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"lviv-2", name:"Львів 2", columns:6, rows:5, rowColors:["green","green","yellow","yellow","purple"] },
+  { id:"zolochiv", name:"Золочів", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"sheptytskyi", name:"Шептицький", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"lutsk", name:"Луцьк", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"ternopil", name:"Тернопіль", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"ivano-frankivsk", name:"Івано-Франківськ", columns:6, rows:4, rowColors:["green","green","yellow","yellow"] },
+  { id:"khmelnytskyi", name:"Хмельницький", columns:6, rows:8, rowColors:["green","green","yellow","yellow","white","white","white","red"] },
+  { id:"odesa", name:"Одеса", columns:10, rows:4, rowColors:["white","white","white","white"] },
+  { id:"arkush1", name:"Аркуш1", columns:9, rows:6, rowColors:["yellow","yellow","yellow","yellow","yellow","yellow"] }
+];
+const DELIVERY_COLORS = {
+  white:"#ffffff", yellow:"#fff59d", green:"#bbf7d0", purple:"#e9d5ff",
+  red:"#fecaca", blue:"#bfdbfe", orange:"#fed7aa", gray:"#e5e7eb"
+};
+const DELIVERY_KEYWORDS = {
+  laundry:["пральн","пралк","сушка","сушиль","посудом"],
+  stove:["плита","плитк","духов","духова шафа"],
+  refrigerator:["холод","мороз","sbs","сайд","side by side"]
+};
+let deliveryBoards = {};
+let currentDeliveryBoardId = "ukraina";
+let deliverySearchTerm = "";
+let editingDeliveryCell = null;
+let deliveryEditColor = "white";
+let deliveryBoardsListening = false;
+
 const loginScreen = document.getElementById("loginScreen");
 const appScreen = document.getElementById("appScreen");
 const passwordInput = document.getElementById("passwordInput");
@@ -492,8 +618,12 @@ const noticeBox = document.getElementById("noticeBox");
 function applyRole(){
   const isDriver = currentUserRole === "driver";
   document.getElementById("dispatcherTab").classList.toggle("hidden", isDriver);
+  document.getElementById("deliveriesTab").classList.toggle("hidden", isDriver);
   if(isDriver) setMode("driver");
-  else setMode("dispatcher");
+  else {
+    listenDeliveryBoards();
+    setMode("dispatcher");
+  }
 }
 
 function completeLogin(role){
@@ -537,11 +667,15 @@ function setMode(mode){
   if(currentUserRole === "driver") mode = "driver";
   document.getElementById("dispatcherView").classList.toggle("hidden", mode !== "dispatcher");
   document.getElementById("driverView").classList.toggle("hidden", mode !== "driver");
+  document.getElementById("deliveriesView").classList.toggle("hidden", mode !== "deliveries");
   document.getElementById("dispatcherTab").className = mode === "dispatcher" ? "tab primary active" : "tab secondary";
+  document.getElementById("deliveriesTab").className = mode === "deliveries" ? "tab primary active" : "tab secondary";
   document.getElementById("driverTab").className = mode === "driver" ? "tab primary active" : "tab secondary";
+  if(mode === "deliveries") renderDeliveryBoards();
 }
 
 document.getElementById("dispatcherTab").addEventListener("click", ()=>setMode("dispatcher"));
+document.getElementById("deliveriesTab").addEventListener("click", ()=>setMode("deliveries"));
 document.getElementById("driverTab").addEventListener("click", ()=>setMode("driver"));
 
 function badgeClass(status){
@@ -627,6 +761,8 @@ function listenRoutes(){
     renderCurrentRoute();
     renderDriverRouteList();
     renderDriverCurrentRoute();
+    renderDeliveryRouteSelect();
+    renderDeliveryBoards();
   });
 }
 
@@ -1652,6 +1788,443 @@ function renderDriverCurrentRoute(){
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
+function defaultDeliveryBoard(template, order){
+  return {
+    id: template.id,
+    name: template.name,
+    order,
+    columns: template.columns,
+    rows: template.rows,
+    rowColors: [...template.rowColors],
+    cells: {}
+  };
+}
+
+function mergeDeliveryBoards(savedBoards){
+  const saved = savedBoards && typeof savedBoards === "object" ? savedBoards : {};
+  const merged = {};
+  DELIVERY_BOARD_TEMPLATES.forEach((template, order) => {
+    const fromDb = saved[template.id] || {};
+    merged[template.id] = {
+      ...defaultDeliveryBoard(template, order),
+      ...fromDb,
+      id: template.id,
+      name: fromDb.name || template.name,
+      order: Number.isFinite(Number(fromDb.order)) ? Number(fromDb.order) : order,
+      columns: Math.max(1, Number(fromDb.columns) || template.columns),
+      rows: Math.max(1, Number(fromDb.rows) || template.rows),
+      rowColors: Array.isArray(fromDb.rowColors) && fromDb.rowColors.length ? fromDb.rowColors : [...template.rowColors],
+      cells: fromDb.cells && typeof fromDb.cells === "object" ? fromDb.cells : {}
+    };
+  });
+  Object.entries(saved).forEach(([id, board]) => {
+    if(merged[id] || !board || typeof board !== "object") return;
+    merged[id] = {
+      id,
+      name: board.name || id,
+      order: Number(board.order) || Object.keys(merged).length,
+      columns: Math.max(1, Number(board.columns) || 6),
+      rows: Math.max(1, Number(board.rows) || 4),
+      rowColors: Array.isArray(board.rowColors) ? board.rowColors : ["white"],
+      cells: board.cells && typeof board.cells === "object" ? board.cells : {}
+    };
+  });
+  return merged;
+}
+
+function listenDeliveryBoards(){
+  if(deliveryBoardsListening || currentUserRole !== "dispatcher") return;
+  deliveryBoardsListening = true;
+  onValue(ref(db, "deliveryBoards"), snap => {
+    deliveryBoards = mergeDeliveryBoards(snap.val());
+    if(!deliveryBoards[currentDeliveryBoardId]) currentDeliveryBoardId = Object.keys(deliveryBoards)[0] || "ukraina";
+    renderDeliveryBoards();
+  });
+}
+
+function deliveryBoardArray(){
+  return Object.values(deliveryBoards).sort((a,b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+}
+
+function deliveryCellKey(row, column){
+  return `r${row}c${column}`;
+}
+
+function deliveryColumnName(index){
+  let value = index + 1;
+  let result = "";
+  while(value > 0){
+    value--;
+    result = String.fromCharCode(65 + (value % 26)) + result;
+    value = Math.floor(value / 26);
+  }
+  return result;
+}
+
+function defaultDeliveryCellColor(board, row){
+  const colors = Array.isArray(board?.rowColors) && board.rowColors.length ? board.rowColors : ["white"];
+  return colors[Math.min(row, colors.length - 1)] || "white";
+}
+
+function countKeywordOccurrences(text, keyword){
+  if(!keyword) return 0;
+  return String(text || "").toLowerCase().split(keyword).length - 1;
+}
+
+function deliveryBoardCounts(board){
+  const result = { laundry:0, stove:0, refrigerator:0 };
+  Object.values(board?.cells || {}).forEach(cell => {
+    const text = String(cell?.text || "").toLowerCase();
+    Object.entries(DELIVERY_KEYWORDS).forEach(([group, keywords]) => {
+      keywords.forEach(keyword => { result[group] += countKeywordOccurrences(text, keyword); });
+    });
+  });
+  return result;
+}
+
+function renderDeliveryCounts(board){
+  const counts = deliveryBoardCounts(board);
+  const combined = counts.laundry + counts.stove;
+  document.getElementById("deliveryCounts").innerHTML = `
+    <div class="delivery-count-card">
+      <div class="delivery-count-label">Пралки + плити</div>
+      <div class="delivery-count-value">${combined}</div>
+      <div class="delivery-count-detail">Пралки/сушки/посудомийки: ${counts.laundry} · Плити/духовки: ${counts.stove}</div>
+    </div>
+    <div class="delivery-count-card">
+      <div class="delivery-count-label">Холодильники</div>
+      <div class="delivery-count-value">${counts.refrigerator}</div>
+      <div class="delivery-count-detail">Холодильники, морозилки, SBS і side by side</div>
+    </div>`;
+}
+
+function deliverySearchMatches(){
+  const query = searchableText(deliverySearchTerm).trim();
+  if(!query) return [];
+  const words = query.split(" ").filter(Boolean);
+  const matches = [];
+  deliveryBoardArray().forEach(board => {
+    Object.entries(board.cells || {}).forEach(([key, cell]) => {
+      const haystack = searchableText(cell?.text || "");
+      if(haystack && words.every(word => haystack.includes(word))){
+        matches.push({ board, key, cell });
+      }
+    });
+  });
+  return matches;
+}
+
+function deliveryCellLabel(key){
+  const match = String(key).match(/^r(\d+)c(\d+)$/);
+  if(!match) return key;
+  return `${deliveryColumnName(Number(match[2]))}${Number(match[1]) + 2}`;
+}
+
+function renderDeliverySearchResults(){
+  const panel = document.getElementById("deliverySearchPanel");
+  const wrap = document.getElementById("deliverySearchResults");
+  const query = deliverySearchTerm.trim();
+  panel.classList.toggle("hidden", !query);
+  if(!query){ wrap.innerHTML = ""; return; }
+  const matches = deliverySearchMatches();
+  if(!matches.length){
+    wrap.innerHTML = '<div class="empty">Нічого не знайдено</div>';
+    return;
+  }
+  wrap.innerHTML = "";
+  matches.forEach(({board, key, cell}) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "delivery-search-result";
+    const preview = String(cell.text || "").replace(/\s+/g," ").trim();
+    button.innerHTML = `<b>${escapeHtml(board.name)} · ${escapeHtml(deliveryCellLabel(key))}</b><div class="small" style="margin-top:5px">${escapeHtml(preview.slice(0,240))}</div>`;
+    button.onclick = () => {
+      currentDeliveryBoardId = board.id;
+      renderDeliveryBoards();
+      openDeliveryCellEditor(board.id, key);
+    };
+    wrap.appendChild(button);
+  });
+}
+
+function renderDeliveryBoards(){
+  if(!Object.keys(deliveryBoards).length) deliveryBoards = mergeDeliveryBoards({});
+  const boards = deliveryBoardArray();
+  const tabs = document.getElementById("deliveryTabs");
+  if(!tabs) return;
+  tabs.innerHTML = "";
+  boards.forEach(board => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `delivery-tab${board.id === currentDeliveryBoardId ? " active" : ""}`;
+    button.textContent = board.name;
+    button.onclick = () => { currentDeliveryBoardId = board.id; renderDeliveryBoards(); };
+    tabs.appendChild(button);
+  });
+
+  const board = deliveryBoards[currentDeliveryBoardId] || boards[0];
+  if(!board) return;
+  document.getElementById("deliveryBoardTitle").textContent = `${board.name} · ${board.rows} ряд. × ${board.columns} кол.`;
+  renderDeliveryCounts(board);
+  renderDeliverySearchResults();
+
+  const grid = document.getElementById("deliveryBoardGrid");
+  grid.style.setProperty("--delivery-columns", board.columns);
+  grid.innerHTML = "";
+  for(let row = 0; row < board.rows; row++){
+    for(let column = 0; column < board.columns; column++){
+      const key = deliveryCellKey(row, column);
+      const cell = board.cells?.[key] || {};
+      const text = String(cell.text || "").trim();
+      const colorName = cell.color || defaultDeliveryCellColor(board, row);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `delivery-cell${text ? "" : " empty-cell"}`;
+      button.style.background = DELIVERY_COLORS[colorName] || DELIVERY_COLORS.white;
+      const code = document.createElement("span");
+      code.className = "delivery-cell-code";
+      code.textContent = deliveryCellLabel(key);
+      const content = document.createElement("span");
+      content.textContent = text || "Натисни, щоб додати доставку";
+      button.append(code, content);
+      const links = Array.isArray(cell.routeLinks) ? cell.routeLinks : [];
+      if(links.length){
+        const badge = document.createElement("span");
+        badge.className = "delivery-route-badge";
+        badge.textContent = `У маршрутах: ${links.length}`;
+        button.appendChild(document.createElement("br"));
+        button.appendChild(badge);
+      }
+      button.onclick = () => openDeliveryCellEditor(board.id, key);
+      grid.appendChild(button);
+    }
+  }
+}
+
+function setDeliveryEditColor(color){
+  deliveryEditColor = DELIVERY_COLORS[color] ? color : "white";
+  document.querySelectorAll("[data-delivery-color]").forEach(button => {
+    button.classList.toggle("active", button.dataset.deliveryColor === deliveryEditColor);
+  });
+}
+
+function renderDeliveryRouteSelect(){
+  const select = document.getElementById("deliveryRouteSelect");
+  if(!select) return;
+  const previous = select.value;
+  const activeRoutes = routeArray().filter(route => !route.archived);
+  select.innerHTML = activeRoutes.length ? '<option value="">Вибери маршрут</option>' : '<option value="">Немає активних маршрутів</option>';
+  activeRoutes.forEach(route => {
+    const option = document.createElement("option");
+    option.value = route.id;
+    option.textContent = `${route.name || "Без назви"} · ${route.date || "без дати"} · ${driverNameById(route.driverId)}`;
+    select.appendChild(option);
+  });
+  const preferred = activeRoutes.some(route => route.id === previous) ? previous : (activeRoutes.some(route => route.id === currentRouteId) ? currentRouteId : "");
+  select.value = preferred;
+}
+
+function openDeliveryCellEditor(boardId, key){
+  const board = deliveryBoards[boardId];
+  if(!board) return;
+  const match = String(key).match(/^r(\d+)c(\d+)$/);
+  const row = match ? Number(match[1]) : 0;
+  const cell = board.cells?.[key] || {};
+  editingDeliveryCell = { boardId, key };
+  document.getElementById("deliveryEditTitle").textContent = `${board.name} · клітинка ${deliveryCellLabel(key)}`;
+  document.getElementById("deliveryEditText").value = cell.text || "";
+  setDeliveryEditColor(cell.color || defaultDeliveryCellColor(board, row));
+  renderDeliveryRouteSelect();
+  document.getElementById("deliveryEditModal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("deliveryEditText").focus(), 0);
+}
+
+function closeDeliveryCellEditor(){
+  editingDeliveryCell = null;
+  document.getElementById("deliveryEditModal").classList.add("hidden");
+}
+
+async function commitDeliveryCell(showSuccess = true){
+  if(!editingDeliveryCell) return null;
+  const { boardId, key } = editingDeliveryCell;
+  const board = deliveryBoards[boardId];
+  if(!board) return null;
+  const oldCell = board.cells?.[key] || {};
+  const text = document.getElementById("deliveryEditText").value.trim();
+  board.cells = { ...(board.cells || {}) };
+  board.cells[key] = {
+    text,
+    color: deliveryEditColor,
+    updatedAt: Date.now(),
+    routeLinks: Array.isArray(oldCell.routeLinks) ? oldCell.routeLinks : []
+  };
+  await set(ref(db, `deliveryBoards/${boardId}`), board);
+  renderDeliveryBoards();
+  if(showSuccess) showNotice("Клітинку доставки збережено","ok");
+  return board.cells[key];
+}
+
+async function saveDeliveryCell(){
+  const saved = await commitDeliveryCell(true);
+  if(saved) closeDeliveryCellEditor();
+}
+
+async function clearDeliveryCell(){
+  if(!editingDeliveryCell) return;
+  if(!confirm("Очистити текст і колір цієї клітинки?")) return;
+  const { boardId, key } = editingDeliveryCell;
+  const board = deliveryBoards[boardId];
+  if(!board) return;
+  board.cells = { ...(board.cells || {}) };
+  delete board.cells[key];
+  await set(ref(db, `deliveryBoards/${boardId}`), board);
+  closeDeliveryCellEditor();
+  showNotice("Клітинку очищено","ok");
+}
+
+async function addDeliveryToRoute(){
+  if(!editingDeliveryCell) return;
+  const routeId = document.getElementById("deliveryRouteSelect").value;
+  if(!routeId) return showNotice("Вибери маршрут","warn");
+  const route = routes[routeId];
+  if(!route || route.archived) return showNotice("Активний маршрут не знайдено","warn");
+  const savedCell = await commitDeliveryCell(false);
+  const text = String(savedCell?.text || "").trim();
+  if(!text) return showNotice("Спочатку запиши текст доставки","warn");
+  const board = deliveryBoards[editingDeliveryCell.boardId];
+  const points = [...(route.points || [])];
+  points.push({
+    id: Date.now(),
+    pointLabel: `${points.length + 1}-точка`,
+    shop: board?.name || "Доставка",
+    rawText: text,
+    rawHtml: "",
+    status: "Очікує",
+    fromFirm: false,
+    sourceDelivery: { boardId: editingDeliveryCell.boardId, cellKey: editingDeliveryCell.key }
+  });
+  await update(ref(db, `routes/${routeId}`), {
+    points,
+    history: appendHistory(route, `Додано доставку з дошки ${board?.name || ""}`.trim())
+  });
+  const cell = board.cells[editingDeliveryCell.key];
+  const routeLinks = Array.isArray(cell.routeLinks) ? [...cell.routeLinks] : [];
+  routeLinks.push({ routeId, routeName: route.name || "Без назви", at: Date.now() });
+  cell.routeLinks = routeLinks.slice(-20);
+  await set(ref(db, `deliveryBoards/${board.id}`), board);
+  closeDeliveryCellEditor();
+  showNotice(`Доставку додано в маршрут “${route.name || "Без назви"}”`,"ok");
+}
+
+async function addDeliveryRow(){
+  const board = deliveryBoards[currentDeliveryBoardId];
+  if(!board) return;
+  board.rows = Math.max(1, Number(board.rows) || 1) + 1;
+  board.rowColors = Array.isArray(board.rowColors) ? [...board.rowColors] : ["white"];
+  board.rowColors.push(board.rowColors[board.rowColors.length - 1] || "white");
+  await set(ref(db, `deliveryBoards/${board.id}`), board);
+  showNotice(`До дошки “${board.name}” додано ряд`,"ok");
+}
+
+function normalizeDeliveryBoardName(name){
+  return String(name || "").trim().toLowerCase().replace(/[’']/g,"").replace(/[-_]+/g," ").replace(/\s+/g," ");
+}
+
+function excelDeliveryColor(cell, fallback){
+  const fill = cell?.s?.fill || {};
+  const raw = String(fill?.fgColor?.rgb || fill?.bgColor?.rgb || "").toUpperCase();
+  const rgb = raw.length === 8 ? raw.slice(2) : raw;
+  const colorMap = {
+    "92D050":"green", "00B050":"green", "C6EFCE":"green",
+    "FFFF00":"yellow", "FFF2CC":"yellow", "FFEB9C":"yellow",
+    "7030A0":"purple", "E4DFEC":"purple",
+    "FF0000":"red", "FFC7CE":"red",
+    "0070C0":"blue", "002060":"blue", "BDD7EE":"blue",
+    "F4B183":"orange", "D9E1F2":"gray"
+  };
+  return colorMap[rgb] || fallback;
+}
+
+function boardTemplateForSheet(sheetName, index){
+  const normalized = normalizeDeliveryBoardName(sheetName);
+  const known = DELIVERY_BOARD_TEMPLATES.find(template => normalizeDeliveryBoardName(template.name) === normalized);
+  if(known) return { ...known, order:index };
+  const idBase = normalized.replace(/[^a-zа-яіїєґ0-9]+/gi,"-").replace(/^-|-$/g,"") || `sheet-${index+1}`;
+  return { id:`excel-${idBase}`, name:String(sheetName || `Аркуш ${index+1}`).trim(), columns:6, rows:4, rowColors:["green","green","yellow","yellow"], order:index };
+}
+
+function importDeliveryWorkbook(arrayBuffer){
+  if(!window.XLSX) throw new Error("Модуль читання Excel не завантажився. Онови сторінку та спробуй ще раз.");
+  const workbook = window.XLSX.read(arrayBuffer, { type:"array", cellStyles:true, cellFormula:true, sheetStubs:true });
+  const imported = {};
+  workbook.SheetNames.forEach((sheetName, index) => {
+    const sheet = workbook.Sheets[sheetName];
+    if(!sheet) return;
+    const template = boardTemplateForSheet(sheetName, index);
+    const board = defaultDeliveryBoard(template, index);
+    const range = window.XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+    const startRow = 1;
+    let lastContentRow = startRow + board.rows - 1;
+    for(let row = startRow; row <= range.e.r; row++){
+      let rowHasContent = false;
+      for(let column = 0; column < board.columns; column++){
+        const address = window.XLSX.utils.encode_cell({ r:row, c:column });
+        const sourceCell = sheet[address];
+        const rawValue = sourceCell?.v;
+        const text = sourceCell?.f ? "" : String(sourceCell?.w ?? rawValue ?? "").trim();
+        if(text) rowHasContent = true;
+        const boardRow = row - startRow;
+        const fallback = defaultDeliveryCellColor(board, boardRow);
+        const color = excelDeliveryColor(sourceCell, fallback);
+        if(text || color !== fallback){
+          board.cells[deliveryCellKey(boardRow, column)] = { text, color, updatedAt:Date.now(), routeLinks:[] };
+        }
+      }
+      if(rowHasContent) lastContentRow = row;
+    }
+    board.rows = Math.max(board.rows, lastContentRow - startRow + 1);
+    while(board.rowColors.length < board.rows) board.rowColors.push(board.rowColors[board.rowColors.length - 1] || "white");
+    imported[board.id] = board;
+  });
+  return imported;
+}
+
+async function handleDeliveryExcelImport(event){
+  const file = event.target.files?.[0];
+  if(!file) return;
+  try{
+    const imported = importDeliveryWorkbook(await file.arrayBuffer());
+    const sheetCount = Object.keys(imported).length;
+    if(!sheetCount) throw new Error("У файлі не знайдено аркушів");
+    if(!confirm(`Імпортувати ${sheetCount} аркушів з “${file.name}”? Поточні дошки буде замінено.`)) return;
+    await set(ref(db, "deliveryBoards"), imported);
+    currentDeliveryBoardId = Object.keys(imported)[0];
+    showNotice(`Excel імпортовано: ${sheetCount} аркушів`,"ok");
+  }catch(error){
+    console.error(error);
+    showNotice(error?.message || "Не вдалося прочитати Excel","err");
+  }finally{
+    event.target.value = "";
+  }
+}
+
+document.getElementById("deliverySearchInput").addEventListener("input", event => {
+  deliverySearchTerm = event.target.value;
+  renderDeliverySearchResults();
+});
+document.getElementById("addDeliveryRowBtn").addEventListener("click", addDeliveryRow);
+document.getElementById("deliveryExcelInput").addEventListener("change", handleDeliveryExcelImport);
+document.querySelectorAll("[data-delivery-color]").forEach(button => {
+  button.addEventListener("click", () => setDeliveryEditColor(button.dataset.deliveryColor));
+});
+document.getElementById("cancelDeliveryEditBtn").addEventListener("click", closeDeliveryCellEditor);
+document.getElementById("saveDeliveryEditBtn").addEventListener("click", saveDeliveryCell);
+document.getElementById("clearDeliveryCellBtn").addEventListener("click", clearDeliveryCell);
+document.getElementById("addDeliveryToRouteBtn").addEventListener("click", addDeliveryToRoute);
+document.getElementById("deliveryEditModal").addEventListener("click", event => {
+  if(event.target.id === "deliveryEditModal") closeDeliveryCellEditor();
+});
+
 async function saveDriverReport(){
   if(!selectedDriverRouteId) return showNotice("Спочатку вибери маршрут","warn");
   const route = routes[selectedDriverRouteId];
@@ -1677,6 +2250,7 @@ renderRouteList();
 renderCurrentRoute();
 renderDriverRouteList();
 renderDriverCurrentRoute();
+renderDeliveryBoards();
 </script>
 </body>
 </html>
