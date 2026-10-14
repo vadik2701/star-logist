@@ -92,6 +92,10 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .money-value{font-size:22px;font-weight:800;color:#166534;line-height:1.2}
 .money-point{font-size:13px;color:#14532d;margin-top:4px;font-weight:700}
 .money-detail{font-size:13px;color:#166534;margin-top:5px;line-height:1.35}
+.print-confirmation-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.received-money-print,.client-signature-print{padding:9px 12px;border:2px dashed #16a34a;border-radius:10px;background:#f0fdf4;color:#14532d;font-size:16px;font-weight:800}
+.client-signature-print{border-color:#64748b;background:#f8fafc;color:#334155}
+.route-expenses-print{margin-top:10px;padding:12px;border:2px dashed #f59e0b;border-radius:10px;background:#fffbeb;color:#78350f;font-size:17px;font-weight:800;min-height:58px}
 .status-summary,.problem-summary{margin-top:14px;background:#fff;border:1px solid #d1d5db;border-radius:16px;padding:14px}
 .status-summary-title,.problem-summary-title{font-size:18px;font-weight:800;margin-bottom:10px}
 .status-pills{display:flex;gap:8px;flex-wrap:wrap}
@@ -232,6 +236,13 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   #printRouteContent .problem-summary{
     display:none !important;
   }
+  #printRouteContent .money-summary{
+    display:block !important;
+    margin-top:8px !important;
+    padding:10px !important;
+    break-inside:avoid !important;
+  }
+  #printRouteContent .money-list{display:none !important}
 }
 
 
@@ -1235,7 +1246,8 @@ function buildMoneySummaryHtml(route){
   if(!summary.rows.length) return "";
   return `
     <div class="money-summary">
-      <div class="money-summary-title">Сума доставок · ${summary.isSpecialTariff ? "Київ/Одеса" : "звичайний рейс"}</div>
+      <div class="money-summary-title">Загальна сума з доставок</div>
+      <div class="money-detail">${summary.isSpecialTariff ? "Тариф Київ/Одеса" : "Звичайний рейс"}</div>
       <div class="money-total">${escapeHtml(formatMoney(summary.total))}</div>
       <div class="money-list">
         ${summary.rows.map(item => `
@@ -1493,7 +1505,9 @@ document.addEventListener("click", async event => {
 function buildDriverCardsHtml(route){
   const points = route?.points || [];
   if(!points.length) return '<div class="empty">У цьому маршруті ще немає точок.</div>';
-  return points.map(point => `
+  return points.map(point => {
+    const receivedAmount = parseManualCost(point.receivedAmount);
+    return `
     <div class="driver-card${point.fromFirm ? " firm" : ""}${point.important ? " important" : ""}">
       <div class="point">${point.pointLabel}</div>
       <div class="shop">${escapeHtml(point.shop || "Магазин")}</div>
@@ -1502,12 +1516,17 @@ function buildDriverCardsHtml(route){
       <div class="raw">${richPointHtml(point)}</div>
       ${noteHtml(point)}
       <div class="status-badge ${badgeClass(point.status)}">Статус: ${escapeHtml(point.status)}</div>
+      <div class="print-confirmation-grid">
+        <div class="received-money-print">Отримано коштів: ${receivedAmount === null ? "________________ грн" : escapeHtml(formatMoney(receivedAmount))}</div>
+        <div class="client-signature-print">Підпис клієнта: ____________________</div>
+      </div>
       <div class="driver-actions" style="margin-top:14px">
         <button class="green">Доставлено</button>
         <button class="yellow">Перенесено</button>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function renderPrintRoute(routeId){
@@ -1524,9 +1543,10 @@ function renderPrintRoute(routeId){
       <div><b>Водій:</b> ${escapeHtml(driverNameById(route.driverId))}</div>
     </div>
     ${buildDriverCardsHtml(route)}
+    ${buildMoneySummaryHtml(route)}
+    <div class="route-expenses-print">Витрати: ____________________________________________________________</div>
     ${buildStatusSummaryHtml(route.points || [])}
     ${buildProblemSummaryHtml(route)}
-    ${buildMoneySummaryHtml(route)}
     ${buildPhoneSummaryHtml(route.points || [])}
   `;
   return true;
@@ -1548,6 +1568,19 @@ async function updatePoint(routeId, pointId, changes, historyMessage="Оновл
   const points = (route.points || []).map(p => p.id === pointId ? {...p, ...changes} : p)
     .map((p,i)=>({...p, pointLabel:`${i+1}-точка`}));
   await update(ref(db, "routes/" + routeId), { points, history: appendHistory(route, historyMessage) });
+}
+
+function editReceivedAmount(routeId, point){
+  const current = parseManualCost(point?.receivedAmount);
+  const next = prompt("Отримано коштів у цій точці, грн. Залиш порожнім, щоб очистити.", current === null ? "" : String(current));
+  if(next === null) return;
+  if(!next.trim()){
+    updatePoint(routeId, point.id, {receivedAmount:null}, "Очищено суму отриманих коштів");
+    return;
+  }
+  const amount = parseManualCost(next);
+  if(amount === null) return showNotice("Введи правильну суму","warn");
+  updatePoint(routeId, point.id, {receivedAmount:amount}, `Отримано коштів: ${formatMoney(amount)}`);
 }
 
 async function deletePoint(routeId, pointId){
@@ -1682,6 +1715,8 @@ function renderCurrentRoute(){
     btnWrap.appendChild(makeBtn(point.important ? "Важливо ✔":"Важливо", point.important ? "yellow":"secondary", ()=>updatePoint(currentRouteId, point.id, {important: !point.important}, "Змінено позначку Важливо")));
     btnWrap.appendChild(makeBtn(point.skipCost ? "Рахувати":"Не рахувати", point.skipCost ? "green":"secondary", ()=>updatePoint(currentRouteId, point.id, {skipCost: !point.skipCost}, "Змінено правило підрахунку")));
     btnWrap.appendChild(makeBtn(point.manualCost !== undefined && point.manualCost !== null ? `Сума: ${formatMoney(parseManualCost(point.manualCost) || 0)}`:"Сума", point.manualCost !== undefined && point.manualCost !== null ? "green":"secondary", ()=>openCostEditor(currentRouteId, point)));
+    const receivedAmount = parseManualCost(point.receivedAmount);
+    btnWrap.appendChild(makeBtn(receivedAmount === null ? "Отримано коштів" : `Отримано: ${formatMoney(receivedAmount)}`, receivedAmount === null ? "secondary" : "green", ()=>editReceivedAmount(currentRouteId, point)));
     btnWrap.appendChild(makeBtn(point.driverNote ? "Примітка ✔":"Примітка", point.driverNote ? "blue":"secondary", ()=>openNoteEditor(currentRouteId, point)));
     btnWrap.appendChild(makeBtn("Магазин","secondary",()=>{
       const next = prompt("Назва магазину", point.shop || "");
@@ -1702,10 +1737,10 @@ function renderCurrentRoute(){
   wrap.innerHTML = "";
   wrap.insertAdjacentHTML("beforeend", buildChangeLogHtml(route));
   wrap.appendChild(table);
+  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildDriverReportHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
   wrap.insertAdjacentHTML("beforeend", buildProblemSummaryHtml(route));
-  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
@@ -1804,8 +1839,8 @@ function renderDriverCurrentRoute(){
 }
     };
   });
-  wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
   wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
+  wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
