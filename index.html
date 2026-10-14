@@ -95,6 +95,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .print-confirmation-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .received-money-print,.client-signature-print{padding:9px 12px;border:2px dashed #16a34a;border-radius:10px;background:#f0fdf4;color:#14532d;font-size:16px;font-weight:800}
 .client-signature-print{border-color:#64748b;background:#f8fafc;color:#334155}
+.route-total-print{margin-top:10px;padding:12px;border:2px dashed #16a34a;border-radius:10px;background:#f0fdf4;color:#14532d;font-size:17px;font-weight:800;min-height:58px}
 .route-expenses-print{margin-top:10px;padding:12px;border:2px dashed #f59e0b;border-radius:10px;background:#fffbeb;color:#78350f;font-size:17px;font-weight:800;min-height:58px}
 .status-summary,.problem-summary{margin-top:14px;background:#fff;border:1px solid #d1d5db;border-radius:16px;padding:14px}
 .status-summary-title,.problem-summary-title{font-size:18px;font-weight:800;margin-bottom:10px}
@@ -236,13 +237,6 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   #printRouteContent .problem-summary{
     display:none !important;
   }
-  #printRouteContent .money-summary{
-    display:block !important;
-    margin-top:8px !important;
-    padding:10px !important;
-    break-inside:avoid !important;
-  }
-  #printRouteContent .money-list{display:none !important}
 }
 
 
@@ -1246,7 +1240,7 @@ function buildMoneySummaryHtml(route){
   if(!summary.rows.length) return "";
   return `
     <div class="money-summary">
-      <div class="money-summary-title">Загальна сума з доставок</div>
+      <div class="money-summary-title">Автоматичний розрахунок доставок (довідково)</div>
       <div class="money-detail">${summary.isSpecialTariff ? "Тариф Київ/Одеса" : "Звичайний рейс"}</div>
       <div class="money-total">${escapeHtml(formatMoney(summary.total))}</div>
       <div class="money-list">
@@ -1543,7 +1537,7 @@ function renderPrintRoute(routeId){
       <div><b>Водій:</b> ${escapeHtml(driverNameById(route.driverId))}</div>
     </div>
     ${buildDriverCardsHtml(route)}
-    ${buildMoneySummaryHtml(route)}
+    <div class="route-total-print">Загальна сума з доставок: __________________ грн</div>
     <div class="route-expenses-print">Витрати: ____________________________________________________________</div>
     ${buildStatusSummaryHtml(route.points || [])}
     ${buildProblemSummaryHtml(route)}
@@ -1737,10 +1731,10 @@ function renderCurrentRoute(){
   wrap.innerHTML = "";
   wrap.insertAdjacentHTML("beforeend", buildChangeLogHtml(route));
   wrap.appendChild(table);
-  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildDriverReportHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
   wrap.insertAdjacentHTML("beforeend", buildProblemSummaryHtml(route));
+  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
@@ -1839,8 +1833,8 @@ function renderDriverCurrentRoute(){
 }
     };
   });
-  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
+  wrap.insertAdjacentHTML("beforeend", buildMoneySummaryHtml(route));
   wrap.insertAdjacentHTML("beforeend", buildPhoneSummaryHtml(points));
 }
 
