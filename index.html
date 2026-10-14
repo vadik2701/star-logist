@@ -1079,7 +1079,9 @@ function formatMoney(value){
 
 function parseManualCost(value){
   if(value === null || value === undefined || value === "") return null;
-  const num = Number(String(value).replace(/\s/g, "").replace(",", "."));
+  const cleaned = String(value).replace(/\s/g, "").replace(/грн/gi, "").replace(",", ".").replace(/[^0-9.-]/g, "");
+  if(!cleaned) return null;
+  const num = Number(cleaned);
   return Number.isFinite(num) && num >= 0 ? num : null;
 }
 
@@ -1577,6 +1579,21 @@ function editReceivedAmount(routeId, point){
   updatePoint(routeId, point.id, {receivedAmount:amount}, `Отримано коштів: ${formatMoney(amount)}`);
 }
 
+function driverDeliverPoint(routeId, pointId){
+  const route = routes[routeId];
+  const point = (route?.points || []).find(item => item.id === pointId);
+  if(!point) return showNotice("Точку не знайдено","warn");
+  const current = parseManualCost(point.receivedAmount);
+  const entered = prompt("Сума отриманих коштів, грн", current === null ? "" : String(current));
+  if(entered === null) return;
+  const amount = parseManualCost(entered);
+  if(amount === null) return showNotice("Введи суму отриманих коштів","warn");
+  updatePoint(routeId, pointId, {
+    status:"Доставлено",
+    receivedAmount:amount
+  }, `Водій доставив точку · отримано ${formatMoney(amount)}`);
+}
+
 async function deletePoint(routeId, pointId){
   const route = routes[routeId];
   if(!route) return;
@@ -1818,7 +1835,7 @@ function renderDriverCurrentRoute(){
       if(action === "down") movePoint(selectedDriverRouteId, pointId, 1);
       if(action === "waiting") updatePoint(selectedDriverRouteId, pointId, {status:"Очікує"}, "Водій поставив статус Очікує");
       if(action === "loaded") updatePoint(selectedDriverRouteId, pointId, {status:"Загружено"}, "Водій поставив статус Загружено");
-      if(action === "delivered") updatePoint(selectedDriverRouteId, pointId, {status:"Доставлено"}, "Водій поставив статус Доставлено");
+      if(action === "delivered") driverDeliverPoint(selectedDriverRouteId, pointId);
       if(action === "postponed"){
   const note = prompt("Причина переносу / примітка:", "");
   if(note !== null){
