@@ -370,6 +370,14 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
           </div>
 
           <div class="panel">
+            <h3 style="margin-top:0">Усі маршрути</h3>
+            <label class="small" style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+              <input id="showArchivedRoutes" type="checkbox" style="width:auto"> Показати завершені
+            </label>
+            <div id="routeList" class="route-list"></div>
+          </div>
+
+          <div class="panel">
             <h3 style="margin-top:0">Водії</h3>
             <div id="driversEditor" class="driver-grid"></div>
             <div class="toolbar" style="margin-top:10px">
@@ -389,13 +397,6 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <div class="small" style="margin-top:8px">Впиши модель або державний номер. Після збереження машину можна вибирати для маршруту.</div>
           </div>
 
-          <div class="panel">
-            <h3 style="margin-top:0">Усі маршрути</h3>
-            <label class="small" style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-              <input id="showArchivedRoutes" type="checkbox" style="width:auto"> Показати завершені
-            </label>
-            <div id="routeList" class="route-list"></div>
-          </div>
         </div>
 
         <div class="main">
