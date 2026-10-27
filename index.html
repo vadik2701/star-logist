@@ -190,12 +190,15 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .delivery-color-choice.active{box-shadow:0 0 0 4px #111827}
 .delivery-route-box{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;align-items:center;margin-top:16px;padding:14px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff}
 .delivery-help{max-width:760px;line-height:1.45}
-.postponed-table-scroll{overflow:auto}
-.postponed-table{min-width:1050px;table-layout:auto}
-.postponed-table th{padding:10px;border:1px solid #d1d5db;background:#fef3c7;color:#78350f;text-align:left;white-space:nowrap}
-.postponed-table td{padding:10px;font-size:14px;min-width:130px}
-.postponed-table .postponed-text{min-width:320px;white-space:pre-wrap}
-.postponed-table .postponed-reason{min-width:200px;color:#92400e;font-weight:700;white-space:pre-wrap}
+.postponed-board-title{font-size:20px;font-weight:800;margin-bottom:10px}
+.postponed-board-scroll{overflow:auto;border:1px solid #d6b84b;border-radius:12px;background:#d6b84b}
+.postponed-board-grid{display:grid;grid-template-columns:repeat(9,minmax(155px,1fr));min-width:1395px;gap:1px}
+.postponed-cell{position:relative;min-height:175px;padding:28px 9px 44px;background:#fff59d;color:#111827;font-size:12px;line-height:1.28;white-space:pre-wrap;overflow:auto}
+.postponed-cell.empty{color:#a16207;font-style:italic;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center}
+.postponed-cell-code{position:absolute;top:6px;left:7px;font-size:9px;font-weight:800;color:#854d0e;background:rgba(255,255,255,.75);padding:2px 5px;border-radius:999px}
+.postponed-delete{position:absolute;top:5px;right:5px;padding:4px 7px;border-radius:8px;background:#dc2626;color:#fff;font-size:10px;box-shadow:none}
+.postponed-meta{font-size:10px;font-weight:800;color:#713f12;margin-bottom:7px}
+.postponed-reason-bottom{position:absolute;left:7px;right:7px;bottom:7px;padding:6px 7px;border-radius:8px;background:#fff;color:#92400e;font-size:10px;font-weight:800;white-space:normal}
 @media (max-width: 900px){
   .layout{grid-template-columns:1fr}
   .delivery-controls{grid-template-columns:1fr 1fr}
@@ -528,7 +531,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
     <div id="postponedView" class="hidden">
       <div class="panel">
         <h2 style="margin-top:0">Перенесені доставки</h2>
-        <div class="small" style="margin-bottom:12px">Сюди автоматично копіюються доставки, які водій позначив як перенесені. У маршруті точка також залишається.</div>
+        <div class="small" style="margin-bottom:12px">Сюди автоматично копіюються доставки, які водій позначив як перенесені. Причина показується внизу клітинки. У маршруті точка також залишається.</div>
         <div id="postponedDeliveriesTable"></div>
       </div>
     </div>
@@ -1753,8 +1756,7 @@ async function driverPostponePoint(routeId, pointId){
   const reason = note.trim() || "Причину не вказано";
   await updatePoint(routeId, pointId, {
     status:"Перенесено",
-    rawText:(point.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + reason,
-    rawHtml:""
+    postponedReason:reason
   }, "Водій поставив статус Перенесено");
   const copyId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
   await set(ref(db, `postponedDeliveries/${copyId}`), {
@@ -1772,6 +1774,16 @@ async function driverPostponePoint(routeId, pointId){
   showNotice("Доставку скопійовано в розділ “Перенесені доставки”","ok");
 }
 
+function postponedDeliveryText(item){
+  return String(item?.point?.rawText || "").replace(/\n\s*\n\[ПЕРЕНЕСЕНО\]:[\s\S]*$/i, "").trim();
+}
+
+async function deletePostponedDelivery(id){
+  if(!id || !confirm("Видалити цю доставку з таблиці перенесених? У маршруті вона залишиться.")) return;
+  await remove(ref(db, `postponedDeliveries/${id}`));
+  showNotice("Доставку видалено з таблиці перенесених","ok");
+}
+
 function renderPostponedDeliveries(){
   const wrap = document.getElementById("postponedDeliveriesTable");
   const items = Object.values(postponedDeliveries || {}).sort((a,b) => (b.postponedAt || 0) - (a.postponedAt || 0));
@@ -1779,24 +1791,24 @@ function renderPostponedDeliveries(){
     wrap.innerHTML = '<div class="empty">Перенесених доставок ще немає.</div>';
     return;
   }
-  wrap.innerHTML = `
-    <div class="postponed-table-scroll">
-      <table class="postponed-table">
-        <thead><tr>
-          <th>Коли перенесено</th><th>Маршрут</th><th>Водій</th><th>Машина</th><th>Точка</th><th>Доставка</th><th>Причина</th>
-        </tr></thead>
-        <tbody>${items.map(item => `
-          <tr>
-            <td>${escapeHtml(formatHistoryTime(item.postponedAt))}</td>
-            <td><b>${escapeHtml(item.routeName || "Без назви")}</b><br><span class="small">${escapeHtml(item.routeDate || "—")}</span></td>
-            <td>${escapeHtml(item.driverName || driverNameById(item.driverId))}</td>
-            <td>${escapeHtml(item.vehicle || "—")}</td>
-            <td>${escapeHtml(item.point?.pointLabel || "—")}<br>${escapeHtml(item.point?.shop || "")}</td>
-            <td class="postponed-text">${escapeHtml(item.point?.rawText || "")}</td>
-            <td class="postponed-reason">${escapeHtml(item.reason || "Причину не вказано")}</td>
-          </tr>`).join("")}</tbody>
-      </table>
+  const columns = 9;
+  const rows = Math.max(3, Math.ceil(items.length / columns));
+  const cells = Array.from({length:rows * columns}, (_, index) => {
+    const item = items[index];
+    const code = `${String.fromCharCode(65 + (index % columns))}${Math.floor(index / columns) + 1}`;
+    if(!item) return `<div class="postponed-cell empty"><span class="postponed-cell-code">${code}</span>Порожня клітинка</div>`;
+    return `<div class="postponed-cell">
+      <span class="postponed-cell-code">${code}</span>
+      <button class="postponed-delete" data-postponed-delete="${escapeHtml(item.id || "")}" title="Видалити">Видалити</button>
+      <div class="postponed-meta">${escapeHtml(item.routeName || "Без назви")} · ${escapeHtml(item.routeDate || "—")}<br>${escapeHtml(item.driverName || driverNameById(item.driverId))} · ${escapeHtml(item.vehicle || "—")}</div>
+      <b>${escapeHtml(item.point?.pointLabel || "—")} · ${escapeHtml(item.point?.shop || "Доставка")}</b><br><br>${escapeHtml(postponedDeliveryText(item))}
+      <div class="postponed-reason-bottom">Причина: ${escapeHtml(item.reason || "Причину не вказано")}</div>
     </div>`;
+  }).join("");
+  wrap.innerHTML = `<div class="postponed-board-title">Перенесені доставки · ${items.length} · 9 кол.</div><div class="postponed-board-scroll"><div class="postponed-board-grid">${cells}</div></div>`;
+  wrap.querySelectorAll("[data-postponed-delete]").forEach(button => {
+    button.onclick = () => deletePostponedDelivery(button.dataset.postponedDelete);
+  });
 }
 
 function listenPostponedDeliveries(){
