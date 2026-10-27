@@ -30,7 +30,17 @@ body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text
 .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
 .topbar-start{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .topbar-start .brand{margin-bottom:0}
-.deliveries-nav{background:#dc2626!important;color:#fff!important}
+.deliveries-nav{
+  position:fixed;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:45;
+  border-radius:0 14px 14px 0;
+  background:#dc2626!important;
+  color:#fff!important;
+  box-shadow:0 5px 18px rgba(127,29,29,.32)
+}
 .deliveries-nav.active{outline:3px solid #fecaca}
 h1{margin:8px 0 6px;font-size:30px}
 .sub{color:var(--muted);margin-bottom:8px}
@@ -49,6 +59,7 @@ button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size
 .yellow{background:var(--yellow);color:#111827}
 .waiting-btn{background:var(--violet);color:#fff}
 .danger{background:var(--red);color:#fff}
+.postponed-nav{background:#f59e0b;color:#422006}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
 .notice{margin-top:10px;padding:12px 14px;border-radius:12px;font-weight:700}
 .notice.ok{background:#dcfce7;color:#166534}
@@ -141,32 +152,36 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .edit-title{font-size:22px;font-weight:700;margin:0 0 12px}
 .edit-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
 .delivery-page{display:grid;gap:14px}
+.delivery-sticky-panel{position:sticky;top:0;z-index:25;padding:10px 12px;box-shadow:0 8px 24px rgba(15,23,42,.16)}
 .delivery-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.delivery-head h2{margin:0 0 6px}
-.delivery-controls{display:grid;grid-template-columns:minmax(240px,1fr) auto auto auto;gap:10px;align-items:center;margin-top:14px}
-.delivery-import{display:inline-flex;align-items:center;justify-content:center;border-radius:14px;padding:12px 18px;cursor:pointer;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap}
-.delivery-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin-top:12px}
-.delivery-tab{white-space:nowrap;background:#e5e7eb;color:#111827;padding:10px 14px}
+.delivery-head h2{margin:0 0 2px;font-size:19px;line-height:1.1}
+.delivery-sticky-panel .delivery-help{font-size:11px;line-height:1.2}
+.delivery-controls{display:grid;grid-template-columns:minmax(240px,1fr) auto auto auto;gap:7px;align-items:center;margin-top:7px}
+.delivery-controls input{padding:8px 10px}
+.delivery-controls button{padding:8px 12px;font-size:13px}
+.delivery-import{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap}
+.delivery-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 4px;margin-top:6px}
+.delivery-tab{white-space:nowrap;background:#e5e7eb;color:#111827;padding:7px 10px;font-size:12px}
 .delivery-tab.active{background:#111827;color:#fff;outline:3px solid #cbd5e1}
-.delivery-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
-.delivery-count-card{background:#002060;color:#fff;border-radius:14px;padding:14px;box-shadow:0 3px 12px rgba(0,32,96,.18)}
+.delivery-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:7px}
+.delivery-count-card{background:#002060;color:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 3px 12px rgba(0,32,96,.18)}
 .delivery-count-card.firm-count{background:#166534;box-shadow:0 3px 12px rgba(22,101,52,.22)}
 .delivery-count-card.shop-count{background:#facc15;color:#422006;box-shadow:0 3px 12px rgba(202,138,4,.22)}
-.delivery-count-label{font-size:14px;opacity:.9;font-weight:700}
-.delivery-count-value{font-size:32px;font-weight:900;margin-top:4px}
-.delivery-count-detail{font-size:13px;opacity:.88;margin-top:4px}
-.delivery-count-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.delivery-count-unit{padding:8px;border-radius:10px;background:rgba(255,255,255,.15);font-size:12px;font-weight:700}
-.delivery-count-unit b{display:block;font-size:22px;margin-top:2px}
-.delivery-count-note{grid-column:1/-1;color:#64748b;font-size:13px;font-weight:700}
+.delivery-count-label{font-size:11px;opacity:.9;font-weight:700}
+.delivery-count-value{font-size:21px;font-weight:900;margin-top:1px;line-height:1}
+.delivery-count-detail{font-size:10px;opacity:.88;margin-top:2px}
+.delivery-count-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px}
+.delivery-count-unit{padding:5px 7px;border-radius:8px;background:rgba(255,255,255,.15);font-size:10px;font-weight:700}
+.delivery-count-unit b{display:inline;font-size:16px;margin-left:5px}
+.delivery-count-note{grid-column:1/-1;color:#64748b;font-size:10px;font-weight:700;line-height:1.2}
 .delivery-board-title{font-size:22px;font-weight:800;margin-bottom:10px}
 .delivery-board-scroll{overflow:auto;border:1px solid #94a3b8;border-radius:12px;background:#94a3b8}
-.delivery-board-grid{display:grid;grid-template-columns:repeat(var(--delivery-columns),minmax(230px,1fr));min-width:calc(var(--delivery-columns) * 230px);gap:1px}
-.delivery-cell{position:relative;min-height:205px;padding:34px 12px 12px;border:0;border-radius:0;box-shadow:none;text-align:left;color:#111827;font-weight:500;line-height:1.38;white-space:pre-wrap;overflow:auto;background:#fff}
+.delivery-board-grid{display:grid;grid-template-columns:repeat(var(--delivery-columns),minmax(175px,1fr));min-width:calc(var(--delivery-columns) * 175px);gap:1px}
+.delivery-cell{position:relative;min-height:145px;padding:27px 9px 9px;border:0;border-radius:0;box-shadow:none;text-align:left;color:#111827;font-size:12px;font-weight:500;line-height:1.28;white-space:pre-wrap;overflow:auto;background:#fff}
 .delivery-cell:hover{outline:4px solid #3b82f6;outline-offset:-4px;z-index:1}
 .delivery-cell.empty-cell{color:#9ca3af;font-style:italic}
-.delivery-cell-code{position:absolute;top:8px;left:10px;font-size:11px;font-weight:800;color:#475569;background:rgba(255,255,255,.82);padding:3px 6px;border-radius:999px}
-.delivery-route-badge{display:inline-block;margin-top:10px;border-radius:999px;background:#dcfce7;color:#166534;padding:5px 8px;font-size:11px;font-weight:800;font-style:normal}
+.delivery-cell-code{position:absolute;top:6px;left:7px;font-size:9px;font-weight:800;color:#475569;background:rgba(255,255,255,.82);padding:2px 5px;border-radius:999px}
+.delivery-route-badge{display:inline-block;margin-top:7px;border-radius:999px;background:#dcfce7;color:#166534;padding:4px 6px;font-size:9px;font-weight:800;font-style:normal}
 .delivery-search-results{display:grid;gap:8px}
 .delivery-search-result{width:100%;text-align:left;background:#fff;color:#111827;border:1px solid #cbd5e1;border-left:6px solid #3b82f6;box-shadow:none}
 .delivery-search-result:hover{background:#eff6ff}
@@ -175,6 +190,12 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 .delivery-color-choice.active{box-shadow:0 0 0 4px #111827}
 .delivery-route-box{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;align-items:center;margin-top:16px;padding:14px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff}
 .delivery-help{max-width:760px;line-height:1.45}
+.postponed-table-scroll{overflow:auto}
+.postponed-table{min-width:1050px;table-layout:auto}
+.postponed-table th{padding:10px;border:1px solid #d1d5db;background:#fef3c7;color:#78350f;text-align:left;white-space:nowrap}
+.postponed-table td{padding:10px;font-size:14px;min-width:130px}
+.postponed-table .postponed-text{min-width:320px;white-space:pre-wrap}
+.postponed-table .postponed-reason{min-width:200px;color:#92400e;font-weight:700;white-space:pre-wrap}
 @media (max-width: 900px){
   .layout{grid-template-columns:1fr}
   .delivery-controls{grid-template-columns:1fr 1fr}
@@ -185,7 +206,10 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   .raw{font-size:16px}
   .delivery-controls,.delivery-route-box{grid-template-columns:1fr}
   .delivery-counts{grid-template-columns:1fr}
-  .delivery-cell{min-height:175px}
+  .delivery-board-grid{grid-template-columns:repeat(var(--delivery-columns),minmax(150px,1fr));min-width:calc(var(--delivery-columns) * 150px)}
+  .delivery-cell{min-height:125px;font-size:11px}
+  .delivery-sticky-panel{top:0;max-height:64vh;overflow-y:auto}
+  .deliveries-nav{padding:11px 12px;font-size:13px}
 }
 
 .print-route{display:none}
@@ -317,6 +341,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
       </div>
       <div class="tabs">
         <button class="tab primary active" id="dispatcherTab">Диспетчер</button>
+        <button class="tab postponed-nav" id="postponedTab">Перенесені доставки</button>
         <button class="tab secondary" id="driverTab">Водій</button>
         <button class="danger logout" id="logoutBtn">Вийти</button>
       </div>
@@ -336,6 +361,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
               <input id="routeNameInput" placeholder="Назва маршруту, напр. Львів 24.04" />
               <input id="routeDateInput" placeholder="Дата" />
               <select id="routeDriverSelect"></select>
+              <select id="routeVehicleSelect"></select>
               <button class="primary" id="createRouteBtn">Створити маршрут</button>
             </div>
           </div>
@@ -348,6 +374,16 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
               <button class="secondary" id="saveDriversBtn">Зберегти водіїв</button>
             </div>
             <div class="small" style="margin-top:8px">Після додавання або зміни імені натисни “Зберегти водіїв”.</div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top:0">Машини</h3>
+            <div id="vehiclesEditor" class="driver-grid"></div>
+            <div class="toolbar" style="margin-top:10px">
+              <button class="blue" id="addVehicleBtn">Додати машину</button>
+              <button class="secondary" id="saveVehiclesBtn">Зберегти машини</button>
+            </div>
+            <div class="small" style="margin-top:8px">Впиши модель або державний номер. Після збереження машину можна вибирати для маршруту.</div>
           </div>
 
           <div class="panel">
@@ -365,11 +401,13 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
               <div><b>Назва:</b> <span id="currentRouteName">—</span></div>
               <div><b>Дата:</b> <span id="currentRouteDate">—</span></div>
               <div><b>Водій:</b> <span id="currentRouteDriver">—</span></div>
+              <div><b>Машина:</b> <span id="currentRouteVehicle">—</span></div>
               <div><b>ID:</b> <span id="currentRouteId">—</span></div>
             </div>
             <div class="toolbar" style="margin-top:12px">
               <button class="secondary" id="copyRouteIdBtn">Копіювати ID</button>
               <button class="blue" id="changeRouteDriverBtn">Змінити водія</button>
+              <button class="blue" id="changeRouteVehicleBtn">Змінити машину</button>
               <button class="blue" id="printRouteBtn">Друк маршруту</button>
               <button class="secondary" id="archiveRouteBtn">Завершити маршрут</button>
               <button class="danger" id="deleteRouteBtn">Видалити маршрут</button>
@@ -421,6 +459,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
               <div><b>Назва:</b> <span id="driverRouteName">—</span></div>
               <div><b>Дата:</b> <span id="driverRouteDate">—</span></div>
               <div><b>Водій:</b> <span id="driverRouteDriver">—</span></div>
+              <div><b>Машина:</b> <span id="driverRouteVehicle">—</span></div>
             </div>
           </div>
           <div class="panel">
@@ -454,7 +493,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 
     <div id="deliveriesView" class="hidden">
       <div class="delivery-page">
-        <div class="panel">
+        <div class="panel delivery-sticky-panel">
           <div class="delivery-head">
             <div>
               <h2>Дошка доставок</h2>
@@ -483,6 +522,14 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <div id="deliveryBoardGrid" class="delivery-board-grid"></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div id="postponedView" class="hidden">
+      <div class="panel">
+        <h2 style="margin-top:0">Перенесені доставки</h2>
+        <div class="small" style="margin-bottom:12px">Сюди автоматично копіюються доставки, які водій позначив як перенесені. У маршруті точка також залишається.</div>
+        <div id="postponedDeliveriesTable"></div>
       </div>
     </div>
   </div>
@@ -588,6 +635,7 @@ const db = getDatabase(app);
 
 const defaultDrivers = ["Водій 1","Водій 2","Водій 3","Водій 4","Водій 5","Водій 6","Водій 7"];
 let drivers = [...defaultDrivers];
+let vehicles = [];
 let routes = {};
 let currentRouteId = "";
 let currentDriverMode = "";
@@ -630,6 +678,8 @@ let deliverySearchTerm = "";
 let editingDeliveryCell = null;
 let deliveryEditColor = "white";
 let deliveryBoardsListening = false;
+let postponedDeliveries = {};
+let postponedDeliveriesListening = false;
 
 const loginScreen = document.getElementById("loginScreen");
 const appScreen = document.getElementById("appScreen");
@@ -643,9 +693,11 @@ function applyRole(){
   const isDriver = currentUserRole === "driver";
   document.getElementById("dispatcherTab").classList.toggle("hidden", isDriver);
   document.getElementById("deliveriesTab").classList.toggle("hidden", isDriver);
+  document.getElementById("postponedTab").classList.toggle("hidden", isDriver);
   if(isDriver) setMode("driver");
   else {
     listenDeliveryBoards();
+    listenPostponedDeliveries();
     setMode("dispatcher");
   }
 }
@@ -692,16 +744,21 @@ function setMode(mode){
   document.getElementById("dispatcherView").classList.toggle("hidden", mode !== "dispatcher");
   document.getElementById("driverView").classList.toggle("hidden", mode !== "driver");
   document.getElementById("deliveriesView").classList.toggle("hidden", mode !== "deliveries");
+  document.getElementById("postponedView").classList.toggle("hidden", mode !== "postponed");
   document.getElementById("dispatcherTab").className = mode === "dispatcher" ? "tab primary active" : "tab secondary";
   document.getElementById("deliveriesTab").className = mode === "deliveries" ? "tab danger deliveries-nav active" : "tab danger deliveries-nav";
+  document.getElementById("postponedTab").className = mode === "postponed" ? "tab postponed-nav active" : "tab postponed-nav";
   document.getElementById("driverTab").className = mode === "driver" ? "tab primary active" : "tab secondary";
   document.getElementById("dispatcherTab").classList.toggle("hidden", currentUserRole === "driver");
-  document.getElementById("deliveriesTab").classList.toggle("hidden", currentUserRole === "driver");
+  document.getElementById("deliveriesTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
+  document.getElementById("postponedTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
   if(mode === "deliveries") renderDeliveryBoards();
+  if(mode === "postponed") renderPostponedDeliveries();
 }
 
 document.getElementById("dispatcherTab").addEventListener("click", ()=>setMode("dispatcher"));
 document.getElementById("deliveriesTab").addEventListener("click", ()=>setMode("deliveries"));
+document.getElementById("postponedTab").addEventListener("click", ()=>setMode("postponed"));
 document.getElementById("driverTab").addEventListener("click", ()=>setMode("driver"));
 
 function badgeClass(status){
@@ -752,6 +809,68 @@ function renderDriverSelects(){
   if(currentDriverMode !== "") driverSel.value = currentDriverMode;
 }
 
+function renderVehiclesEditor(){
+  const wrap = document.getElementById("vehiclesEditor");
+  wrap.innerHTML = "";
+  const rows = vehicles.length ? vehicles : [""];
+  rows.forEach((name, i) => {
+    const input = document.createElement("input");
+    input.value = name;
+    input.placeholder = `Машина ${i + 1}: модель або держномер`;
+    input.dataset.index = i;
+    wrap.appendChild(input);
+  });
+}
+
+function renderVehicleSelect(){
+  const select = document.getElementById("routeVehicleSelect");
+  const previous = select.value;
+  select.innerHTML = '<option value="">Вибери машину</option>';
+  vehicles.forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+  if(vehicles.includes(previous)) select.value = previous;
+}
+
+function addVehicle(){
+  const inputs = [...document.querySelectorAll("#vehiclesEditor input")];
+  vehicles = inputs.map(input => input.value.trim()).filter(Boolean);
+  vehicles.push("");
+  renderVehiclesEditor();
+  const newInput = document.querySelector("#vehiclesEditor input:last-child");
+  if(newInput) newInput.focus();
+}
+
+async function saveVehicles(){
+  const inputs = [...document.querySelectorAll("#vehiclesEditor input")];
+  const seen = new Set();
+  vehicles = inputs.map(input => input.value.trim()).filter(name => {
+    const key = name.toLowerCase();
+    if(!name || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  await set(ref(db, "settings/vehicles"), vehicles);
+  renderVehiclesEditor();
+  renderVehicleSelect();
+  showNotice("Машини збережено","ok");
+}
+
+document.getElementById("addVehicleBtn").addEventListener("click", addVehicle);
+document.getElementById("saveVehiclesBtn").addEventListener("click", saveVehicles);
+
+function listenVehicles(){
+  onValue(ref(db, "settings/vehicles"), snap => {
+    const value = snap.val();
+    vehicles = Array.isArray(value) ? value.map(item => String(item || "").trim()).filter(Boolean) : [];
+    renderVehiclesEditor();
+    renderVehicleSelect();
+  });
+}
+
 async function saveDrivers(){
   const inputs = [...document.querySelectorAll("#driversEditor input")];
   drivers = inputs.map((i, idx)=> i.value.trim() || `Водій ${idx+1}`);
@@ -796,17 +915,24 @@ function driverNameById(driverId){
   return drivers[Number(driverId)] || "—";
 }
 
+function routeVehicleLabel(route){
+  return String(route?.vehicle || "").trim() || "—";
+}
+
 async function createRoute(){
   const name = document.getElementById("routeNameInput").value.trim();
   const date = document.getElementById("routeDateInput").value.trim();
   const driverId = document.getElementById("routeDriverSelect").value;
+  const vehicle = document.getElementById("routeVehicleSelect").value;
   if(!name) return showNotice("Введи назву маршруту","warn");
   if(driverId === "") return showNotice("Вибери водія","warn");
+  if(vehicle === "") return showNotice("Вибери машину","warn");
   const id = Math.random().toString(36).slice(2,10).toUpperCase();
   const route = {
     name,
     date: date || "",
     driverId,
+    vehicle,
     createdAt: Date.now(),
     history: [{ at: Date.now(), message: "Створено маршрут" }],
     points: []
@@ -815,6 +941,7 @@ async function createRoute(){
   currentRouteId = id;
   document.getElementById("routeNameInput").value = "";
   document.getElementById("routeDateInput").value = "";
+  document.getElementById("routeVehicleSelect").value = "";
   showNotice("Маршрут створено","ok");
 }
 
@@ -855,6 +982,28 @@ async function changeRouteDriver(){
   showNotice("Водія маршруту змінено","ok");
 }
 document.getElementById("changeRouteDriverBtn").addEventListener("click", changeRouteDriver);
+
+async function changeRouteVehicle(){
+  if(!currentRouteId) return showNotice("Спочатку відкрий маршрут","warn");
+  const route = routes[currentRouteId];
+  if(!route) return showNotice("Маршрут не знайдено","warn");
+  if(!vehicles.length) return showNotice("Спочатку додай і збережи машину","warn");
+  const list = vehicles.map((name, i) => `${i + 1}. ${name}`).join("\n");
+  const current = Math.max(0, vehicles.indexOf(route.vehicle)) + 1;
+  const answer = prompt(`Вибери машину номером:\n\n${list}`, String(current));
+  if(answer === null) return;
+  const num = Number(answer.trim());
+  if(!Number.isInteger(num) || num < 1 || num > vehicles.length){
+    return showNotice("Введи номер машини від 1 до " + vehicles.length, "warn");
+  }
+  const vehicle = vehicles[num - 1];
+  await update(ref(db, "routes/" + currentRouteId), {
+    vehicle,
+    history: appendHistory(route, `Змінено машину маршруту: ${vehicle}`)
+  });
+  showNotice("Машину маршруту збережено","ok");
+}
+document.getElementById("changeRouteVehicleBtn").addEventListener("click", changeRouteVehicle);
 
 async function toggleArchiveCurrentRoute(){
   if(!currentRouteId) return showNotice("Спочатку відкрий маршрут","warn");
@@ -1537,6 +1686,7 @@ function renderPrintRoute(routeId){
       <div><b>Назва:</b> ${escapeHtml(route.name || "—")}</div>
       <div><b>Дата:</b> ${escapeHtml(route.date || "—")}</div>
       <div><b>Водій:</b> ${escapeHtml(driverNameById(route.driverId))}</div>
+      <div><b>Машина:</b> ${escapeHtml(routeVehicleLabel(route))}</div>
     </div>
     ${buildDriverCardsHtml(route)}
     <div class="route-total-print">Загальна сума з доставок: __________________ грн</div>
@@ -1594,6 +1744,70 @@ function driverDeliverPoint(routeId, pointId){
   }, `Водій доставив точку · отримано ${formatMoney(amount)}`);
 }
 
+async function driverPostponePoint(routeId, pointId){
+  const route = routes[routeId];
+  const point = (route?.points || []).find(item => item.id === pointId);
+  if(!route || !point) return showNotice("Точку не знайдено","warn");
+  const note = prompt("Причина переносу / примітка:", "");
+  if(note === null) return;
+  const reason = note.trim() || "Причину не вказано";
+  await updatePoint(routeId, pointId, {
+    status:"Перенесено",
+    rawText:(point.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + reason,
+    rawHtml:""
+  }, "Водій поставив статус Перенесено");
+  const copyId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+  await set(ref(db, `postponedDeliveries/${copyId}`), {
+    id:copyId,
+    routeId,
+    routeName:route.name || "Без назви",
+    routeDate:route.date || "",
+    driverId:String(route.driverId ?? ""),
+    driverName:driverNameById(route.driverId),
+    vehicle:routeVehicleLabel(route),
+    reason,
+    postponedAt:Date.now(),
+    point:{...point, status:"Перенесено"}
+  });
+  showNotice("Доставку скопійовано в розділ “Перенесені доставки”","ok");
+}
+
+function renderPostponedDeliveries(){
+  const wrap = document.getElementById("postponedDeliveriesTable");
+  const items = Object.values(postponedDeliveries || {}).sort((a,b) => (b.postponedAt || 0) - (a.postponedAt || 0));
+  if(!items.length){
+    wrap.innerHTML = '<div class="empty">Перенесених доставок ще немає.</div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="postponed-table-scroll">
+      <table class="postponed-table">
+        <thead><tr>
+          <th>Коли перенесено</th><th>Маршрут</th><th>Водій</th><th>Машина</th><th>Точка</th><th>Доставка</th><th>Причина</th>
+        </tr></thead>
+        <tbody>${items.map(item => `
+          <tr>
+            <td>${escapeHtml(formatHistoryTime(item.postponedAt))}</td>
+            <td><b>${escapeHtml(item.routeName || "Без назви")}</b><br><span class="small">${escapeHtml(item.routeDate || "—")}</span></td>
+            <td>${escapeHtml(item.driverName || driverNameById(item.driverId))}</td>
+            <td>${escapeHtml(item.vehicle || "—")}</td>
+            <td>${escapeHtml(item.point?.pointLabel || "—")}<br>${escapeHtml(item.point?.shop || "")}</td>
+            <td class="postponed-text">${escapeHtml(item.point?.rawText || "")}</td>
+            <td class="postponed-reason">${escapeHtml(item.reason || "Причину не вказано")}</td>
+          </tr>`).join("")}</tbody>
+      </table>
+    </div>`;
+}
+
+function listenPostponedDeliveries(){
+  if(postponedDeliveriesListening || currentUserRole !== "dispatcher") return;
+  postponedDeliveriesListening = true;
+  onValue(ref(db, "postponedDeliveries"), snap => {
+    postponedDeliveries = snap.val() || {};
+    renderPostponedDeliveries();
+  });
+}
+
 async function deletePoint(routeId, pointId){
   const route = routes[routeId];
   if(!route) return;
@@ -1638,7 +1852,7 @@ function renderRouteList(){
     const div = document.createElement("div");
     div.className = "route-item" + (route.id === currentRouteId ? " active" : "") + (route.archived ? " archived-route" : "");
     div.innerHTML = `<div class="route-title">${route.name || "Без назви"}</div>
-      <div class="route-meta">${route.date || "—"} · ${driverNameById(route.driverId)} · ${route.archived ? "Завершено · " : ""}ID: ${route.id}</div>`;
+      <div class="route-meta">${route.date || "—"} · ${driverNameById(route.driverId)} · Машина: ${escapeHtml(routeVehicleLabel(route))} · ${route.archived ? "Завершено · " : ""}ID: ${route.id}</div>`;
     div.onclick = ()=>{ currentRouteId = route.id; renderRouteList(); renderCurrentRoute(); };
     wrap.appendChild(div);
   });
@@ -1650,6 +1864,7 @@ function renderCurrentRoute(){
   document.getElementById("currentRouteName").textContent = route?.name || "—";
   document.getElementById("currentRouteDate").textContent = route?.date || "—";
   document.getElementById("currentRouteDriver").textContent = route ? driverNameById(route.driverId) : "—";
+  document.getElementById("currentRouteVehicle").textContent = routeVehicleLabel(route);
   document.getElementById("archiveRouteBtn").textContent = route?.archived ? "Повернути маршрут" : "Завершити маршрут";
 
   const wrap = document.getElementById("dispatcherRouteContent");
@@ -1779,7 +1994,7 @@ function renderDriverRouteList(){
     const div = document.createElement("div");
     div.className = "route-item" + (route.id === selectedDriverRouteId ? " active" : "");
     div.innerHTML = `<div class="route-title">${route.name || "Без назви"}</div>
-      <div class="route-meta">${route.date || "—"}</div>`;
+      <div class="route-meta">${route.date || "—"} · Машина: ${escapeHtml(routeVehicleLabel(route))}</div>`;
     div.onclick = ()=>{ selectedDriverRouteId = route.id; renderDriverRouteList(); renderDriverCurrentRoute(); };
     wrap.appendChild(div);
   });
@@ -1790,6 +2005,7 @@ function renderDriverCurrentRoute(){
   document.getElementById("driverRouteName").textContent = route?.name || "—";
   document.getElementById("driverRouteDate").textContent = route?.date || "—";
   document.getElementById("driverRouteDriver").textContent = route ? driverNameById(route.driverId) : "—";
+  document.getElementById("driverRouteVehicle").textContent = routeVehicleLabel(route);
   const reportPanel = document.getElementById("driverReportPanel");
   reportPanel.classList.toggle("hidden", !route);
   document.getElementById("driverRouteNotes").value = route?.driverNotes || "";
@@ -1836,18 +2052,7 @@ function renderDriverCurrentRoute(){
       if(action === "waiting") updatePoint(selectedDriverRouteId, pointId, {status:"Очікує"}, "Водій поставив статус Очікує");
       if(action === "loaded") updatePoint(selectedDriverRouteId, pointId, {status:"Загружено"}, "Водій поставив статус Загружено");
       if(action === "delivered") driverDeliverPoint(selectedDriverRouteId, pointId);
-      if(action === "postponed"){
-  const note = prompt("Причина переносу / примітка:", "");
-  if(note !== null){
-    const route = routes[selectedDriverRouteId];
-    const point = route.points.find(p=>p.id===pointId);
-    updatePoint(selectedDriverRouteId, pointId, {
-      status:"Перенесено",
-      rawText: (point?.rawText || "") + "\n\n[ПЕРЕНЕСЕНО]: " + (note || ""),
-      rawHtml: ""
-    }, "Водій поставив статус Перенесено");
-  }
-}
+      if(action === "postponed") driverPostponePoint(selectedDriverRouteId, pointId);
     };
   });
   wrap.insertAdjacentHTML("beforeend", buildStatusSummaryHtml(points));
@@ -2129,7 +2334,7 @@ function renderDeliveryRouteSelect(){
   activeRoutes.forEach(route => {
     const option = document.createElement("option");
     option.value = route.id;
-    option.textContent = `${route.name || "Без назви"} · ${route.date || "без дати"} · ${driverNameById(route.driverId)}`;
+    option.textContent = `${route.name || "Без назви"} · ${route.date || "без дати"} · ${driverNameById(route.driverId)} · ${routeVehicleLabel(route)}`;
     select.appendChild(option);
   });
   const preferred = activeRoutes.some(route => route.id === previous) ? previous : (activeRoutes.some(route => route.id === currentRouteId) ? currentRouteId : "");
@@ -2370,9 +2575,12 @@ async function saveDriverReport(){
 document.getElementById("saveDriverReportBtn").addEventListener("click", saveDriverReport);
 
 listenDrivers();
+listenVehicles();
 listenRoutes();
 renderDriversEditor();
 renderDriverSelects();
+renderVehiclesEditor();
+renderVehicleSelect();
 renderRouteList();
 renderCurrentRoute();
 renderDriverRouteList();
