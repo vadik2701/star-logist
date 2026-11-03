@@ -75,6 +75,20 @@ button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size
 .driver-grid{display:grid;grid-template-columns:1fr;gap:8px}
 .small{font-size:13px;color:var(--muted)}
 .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.vehicle-board-wrap{overflow-x:auto;border:1px solid #bfdbfe;border-radius:14px}
+.vehicle-board-table{min-width:0;width:100%;margin:0;table-layout:fixed}
+.vehicle-board-table th{padding:11px 12px;text-align:left;background:#1d4ed8;color:#fff;font-size:14px;border-right:1px solid #60a5fa}
+.vehicle-board-table td{padding:12px;font-size:15px;min-height:0;border-color:#dbeafe;vertical-align:middle}
+.vehicle-board-table tr:nth-child(even) td{background:#eff6ff}
+.vehicle-board-table tr.own-route td{background:#dcfce7;font-weight:700}
+.vehicle-board-machine{display:inline-block;background:#111827;color:#fff;border-radius:999px;padding:7px 10px;font-weight:800}
+.vehicle-board-missing{color:#b91c1c;font-weight:800}
+.star-ttn-editor{display:grid;gap:10px}
+.star-ttn-row{display:grid;gap:7px;padding:10px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc}
+.star-ttn-row-number{font-size:12px;font-weight:900;color:#1d4ed8;text-transform:uppercase}
+.star-ttn-date-label{display:grid;gap:6px;font-weight:800;margin-bottom:10px}
+.star-ttn-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.star-ttn-date-badge{display:inline-block;background:#fee2e2;color:#991b1b;border-radius:999px;padding:7px 10px;font-size:13px;font-weight:900}
 .empty{text-align:center;color:var(--muted);padding:24px;border:1px dashed #cbd5e1;border-radius:14px;background:#fff}
 table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed}
 td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;line-height:1.45}
@@ -397,6 +411,16 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <div class="small" style="margin-top:8px">Впиши модель або державний номер. Після збереження машину можна вибирати для маршруту.</div>
           </div>
 
+          <div class="panel">
+            <h3 style="margin-top:0">СТАР ТТН · План виїздів</h3>
+            <div id="starTtnEditor" class="star-ttn-editor"></div>
+            <div class="toolbar" style="margin-top:10px">
+              <button class="blue" id="addStarTtnRowBtn">Додати пункт</button>
+              <button class="primary" id="saveStarTtnBtn">Зберегти СТАР ТТН</button>
+            </div>
+            <div class="small" style="margin-top:8px">Приклад: Спрінтер — Луцьк, Сітроен — Рівне. Збережений список одразу бачать усі водії.</div>
+          </div>
+
         </div>
 
         <div class="main">
@@ -458,6 +482,11 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
           </div>
         </div>
         <div class="main">
+          <div class="panel">
+            <h3 style="margin-top:0">СТАР ТТН · План виїздів</h3>
+            <div class="small" style="margin-bottom:10px">Вечірній список від диспетчера для всіх водіїв.</div>
+            <div id="driverVehicleBoard"></div>
+          </div>
           <div class="panel">
             <div class="meta-grid">
               <div><b>Назва:</b> <span id="driverRouteName">—</span></div>
@@ -640,6 +669,7 @@ const db = getDatabase(app);
 const defaultDrivers = ["Водій 1","Водій 2","Водій 3","Водій 4","Водій 5","Водій 6","Водій 7"];
 let drivers = [...defaultDrivers];
 let vehicles = [];
+let starTtnSchedule = { rows:[] };
 let routes = {};
 let currentRouteId = "";
 let currentDriverMode = "";
@@ -898,6 +928,7 @@ function listenDrivers(){
     renderRouteList();
     renderDriverRouteList();
     renderCurrentRoute();
+    renderDriverVehicleBoard();
   });
 }
 
@@ -910,6 +941,7 @@ function listenRoutes(){
     renderCurrentRoute();
     renderDriverRouteList();
     renderDriverCurrentRoute();
+    renderDriverVehicleBoard();
     renderDeliveryRouteSelect();
     renderDeliveryBoards();
   });
@@ -922,6 +954,98 @@ function driverNameById(driverId){
 function routeVehicleLabel(route){
   return String(route?.vehicle || "").trim() || "—";
 }
+
+function renderDriverVehicleBoard(){
+  const wrap = document.getElementById("driverVehicleBoard");
+  if(!wrap) return;
+  const scheduleRows = Array.isArray(starTtnSchedule.rows) ? starTtnSchedule.rows.filter(row => row && (row.destination || row.vehicle)) : [];
+  if(!scheduleRows.length){
+    wrap.innerHTML = '<div class="empty">Диспетчер ще не заповнив план СТАР ТТН</div>';
+    return;
+  }
+  const rows = scheduleRows.map(row => {
+    const vehicleHtml = row.vehicle
+      ? `<span class="vehicle-board-machine">${escapeHtml(row.vehicle)}</span>`
+      : '<span class="vehicle-board-missing">Машину не вказано</span>';
+    return `<tr>
+      <td>${vehicleHtml}</td>
+      <td><b>${escapeHtml(row.destination || "Куди не вказано")}</b></td>
+    </tr>`;
+  }).join("");
+  wrap.innerHTML = `<div class="vehicle-board-wrap">
+    <table class="vehicle-board-table">
+      <thead><tr><th>Машина</th><th>Куди їде</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function readStarTtnRowsFromEditor(){
+  return [...document.querySelectorAll("#starTtnEditor .star-ttn-row")].map(row => ({
+    destination: row.querySelector('[data-star-ttn="destination"]')?.value.trim() || "",
+    vehicle: row.querySelector('[data-star-ttn="vehicle"]')?.value.trim() || ""
+  }));
+}
+
+function renderStarTtnEditor(){
+  const wrap = document.getElementById("starTtnEditor");
+  if(!wrap) return;
+  const rows = Array.isArray(starTtnSchedule.rows) && starTtnSchedule.rows.length ? starTtnSchedule.rows : [{destination:"",vehicle:""}];
+  wrap.innerHTML = "";
+  rows.forEach((row, index) => {
+    const div = document.createElement("div");
+    div.className = "star-ttn-row";
+    div.innerHTML = `
+      <div class="star-ttn-row-number">Пункт ${index + 1}</div>
+      <input data-star-ttn="vehicle" placeholder="Машина, напр. високий бус" value="${escapeAttr(row.vehicle || "")}">
+      <input data-star-ttn="destination" placeholder="Куди їде, напр. Рівне" value="${escapeAttr(row.destination || "")}">
+      <button type="button" class="danger" data-star-ttn-delete="${index}">Видалити пункт</button>`;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll("[data-star-ttn-delete]").forEach(button => {
+    button.onclick = () => {
+      const rowsNow = readStarTtnRowsFromEditor();
+      rowsNow.splice(Number(button.dataset.starTtnDelete), 1);
+      starTtnSchedule = { ...starTtnSchedule, rows: rowsNow.length ? rowsNow : [{destination:"",vehicle:""}] };
+      renderStarTtnEditor();
+    };
+  });
+}
+
+function addStarTtnRow(){
+  const rows = readStarTtnRowsFromEditor();
+  rows.push({destination:"",vehicle:""});
+  starTtnSchedule = { ...starTtnSchedule, rows };
+  renderStarTtnEditor();
+  const lastDestination = document.querySelector('#starTtnEditor .star-ttn-row:last-child [data-star-ttn="destination"]');
+  if(lastDestination) lastDestination.focus();
+}
+
+async function saveStarTtn(){
+  const rawRows = readStarTtnRowsFromEditor();
+  const incomplete = rawRows.find(row => (row.destination || row.vehicle) && (!row.destination || !row.vehicle));
+  if(incomplete) return showNotice("У кожному пункті вкажи машину та куди вона їде","warn");
+  const rows = rawRows.filter(row => row.destination && row.vehicle);
+  starTtnSchedule = { rows, updatedAt:Date.now() };
+  await set(ref(db, "settings/starTtn"), starTtnSchedule);
+  renderStarTtnEditor();
+  renderDriverVehicleBoard();
+  showNotice("План СТАР ТТН збережено — водії вже його бачать","ok");
+}
+
+function listenStarTtn(){
+  onValue(ref(db, "settings/starTtn"), snap => {
+    const value = snap.val();
+    starTtnSchedule = value && typeof value === "object"
+      ? { rows:Array.isArray(value.rows) ? value.rows : [], updatedAt:value.updatedAt || 0 }
+      : { rows:[] };
+    renderStarTtnEditor();
+    renderDriverVehicleBoard();
+  });
+}
+
+document.getElementById("addStarTtnRowBtn").addEventListener("click", addStarTtnRow);
+document.getElementById("saveStarTtnBtn").addEventListener("click", saveStarTtn);
 
 async function createRoute(){
   const name = document.getElementById("routeNameInput").value.trim();
@@ -1988,6 +2112,7 @@ document.getElementById("driverModeSelect").addEventListener("change", e=>{
   selectedDriverRouteId = "";
   renderDriverRouteList();
   renderDriverCurrentRoute();
+  renderDriverVehicleBoard();
 });
 
 function renderDriverRouteList(){
@@ -2589,15 +2714,18 @@ document.getElementById("saveDriverReportBtn").addEventListener("click", saveDri
 
 listenDrivers();
 listenVehicles();
+listenStarTtn();
 listenRoutes();
 renderDriversEditor();
 renderDriverSelects();
 renderVehiclesEditor();
 renderVehicleSelect();
+renderStarTtnEditor();
 renderRouteList();
 renderCurrentRoute();
 renderDriverRouteList();
 renderDriverCurrentRoute();
+renderDriverVehicleBoard();
 renderDeliveryBoards();
 </script>
 </body>
