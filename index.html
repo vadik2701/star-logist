@@ -73,6 +73,11 @@ button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size
 .route-title{font-weight:700}
 .route-meta{font-size:13px;color:var(--muted);margin-top:4px}
 .driver-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.driver-editor-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.driver-editor-row button{padding:10px 12px;font-size:12px}
+.driver-access-status{padding:10px 12px;border-radius:12px;background:#f1f5f9;color:#334155;font-weight:800;margin-bottom:10px}
+.driver-access-status.unlocked{background:#dcfce7;color:#166534}
+.driver-access-status.locked{background:#fee2e2;color:#991b1b}
 .small{font-size:13px;color:var(--muted)}
 .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .vehicle-board-wrap{overflow-x:auto;border:1px solid #bfdbfe;border-radius:14px}
@@ -521,7 +526,17 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <select id="driverModeSelect"></select>
             <div class="small" style="margin-top:8px">Водій бачить тільки свої маршрути.</div>
           </div>
-          <div class="panel">
+          <div class="panel" id="driverAccessPanel">
+            <h3 style="margin-top:0">Пароль водія</h3>
+            <div id="driverAccessStatus" class="driver-access-status">Спочатку вибери водія</div>
+            <input id="driverPersonalPassword" type="password" autocomplete="current-password" placeholder="Введи пароль" />
+            <div class="toolbar" style="margin-top:10px">
+              <button class="primary" id="driverUnlockBtn">Відкрити вкладку</button>
+              <button class="blue" id="driverSetPasswordBtn">Встановити пароль</button>
+            </div>
+            <div class="small" style="margin-top:8px">Мінімум 4 символи. Після перезавантаження пароль потрібно ввести знову.</div>
+          </div>
+          <div class="panel" id="driverFoldersPanel">
             <h3 style="margin-top:0">Папки водія</h3>
             <div class="driver-folder-buttons">
               <button class="primary active" id="driverRoutesFolderBtn">Маршрути</button>
@@ -534,6 +549,9 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
           </div>
         </div>
         <div class="main">
+          <div id="driverLockedMessage" class="panel hidden">
+            <div class="empty">Введи особистий пароль водія, щоб відкрити маршрути та години.</div>
+          </div>
           <div id="driverRoutesMain">
             <div class="panel">
               <h3 style="margin-top:0">СТАР ТТН · План виїздів</h3>
@@ -816,6 +834,8 @@ let currentDriverMode = "";
 let selectedDriverRouteId = "";
 let driverFolder = "routes";
 let workHours = {};
+let driverPasswords = {};
+const unlockedDriverIds = new Set();
 let showArchivedRoutes = false;
 let routeSearchTerm = "";
 let currentUserRole = localStorage.getItem(ROLE_KEY) || "";
@@ -927,6 +947,123 @@ function localTimeValue(date = new Date()){
   return `${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
 }
 
+async function hashPersonalPassword(value){
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256",bytes);
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2,"0")).join("");
+}
+
+function driverPasswordEntry(driverId){
+  const value = driverPasswords?.[String(driverId)];
+  if(typeof value === "string") return {hash:value};
+  return value && typeof value === "object" ? value : {};
+}
+
+function currentDriverCanAccess(){
+  if(currentDriverMode === "") return false;
+  if(currentUserRole === "dispatcher") return true;
+  const entry = driverPasswordEntry(currentDriverMode);
+  return !entry.hash || unlockedDriverIds.has(String(currentDriverMode));
+}
+
+function applyDriverAccessVisibility(){
+  const canAccess = currentDriverCanAccess();
+  document.getElementById("driverFoldersPanel").classList.toggle("hidden", !canAccess);
+  document.getElementById("driverRoutesSidebarPanel").classList.toggle("hidden", !canAccess || driverFolder !== "routes");
+  document.getElementById("driverRoutesMain").classList.toggle("hidden", !canAccess || driverFolder !== "routes");
+  document.getElementById("driverHoursMain").classList.toggle("hidden", !canAccess || driverFolder !== "hours");
+  const locked = document.getElementById("driverLockedMessage");
+  locked.classList.toggle("hidden", canAccess);
+  locked.querySelector(".empty").textContent = currentDriverMode === ""
+    ? "Спочатку вибери водія."
+    : "Введи особистий пароль водія, щоб відкрити маршрути та години.";
+}
+
+function renderDriverAccess(){
+  const status = document.getElementById("driverAccessStatus");
+  const input = document.getElementById("driverPersonalPassword");
+  const unlockButton = document.getElementById("driverUnlockBtn");
+  const setButton = document.getElementById("driverSetPasswordBtn");
+  if(currentDriverMode === ""){
+    status.className = "driver-access-status";
+    status.textContent = "Спочатку вибери водія";
+    input.disabled = true;
+    unlockButton.classList.add("hidden");
+    setButton.classList.add("hidden");
+    applyDriverAccessVisibility();
+    return;
+  }
+  const entry = driverPasswordEntry(currentDriverMode);
+  const hasPassword = Boolean(entry.hash);
+  const canAccess = currentDriverCanAccess();
+  input.disabled = false;
+  unlockButton.classList.toggle("hidden", !hasPassword || canAccess);
+  setButton.classList.toggle("hidden", hasPassword && !canAccess);
+  setButton.textContent = hasPassword ? "Змінити пароль" : "Встановити пароль";
+  input.placeholder = hasPassword && !canAccess ? "Введи особистий пароль" : "Новий пароль, мінімум 4 символи";
+  if(!hasPassword){
+    status.className = "driver-access-status";
+    status.textContent = "Пароль ще не встановлено. Водій може створити його зараз.";
+  }else if(canAccess){
+    status.className = "driver-access-status unlocked";
+    status.textContent = currentUserRole === "dispatcher" ? "Диспетчер має доступ. Особистий пароль встановлено." : "Вкладку водія відкрито.";
+  }else{
+    status.className = "driver-access-status locked";
+    status.textContent = "Вкладка захищена особистим паролем.";
+  }
+  applyDriverAccessVisibility();
+}
+
+async function unlockDriverFolder(){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const password = document.getElementById("driverPersonalPassword").value;
+  if(!password) return showNotice("Введи особистий пароль","warn");
+  const entry = driverPasswordEntry(currentDriverMode);
+  if(!entry.hash || await hashPersonalPassword(password) !== entry.hash) return showNotice("Неправильний пароль водія","err");
+  unlockedDriverIds.add(String(currentDriverMode));
+  document.getElementById("driverPersonalPassword").value = "";
+  renderDriverAccess();
+  renderDriverRouteList();
+  renderDriverCurrentRoute();
+  renderDriverHours();
+  showNotice("Вкладку водія відкрито","ok");
+}
+
+async function saveDriverPassword(){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const entry = driverPasswordEntry(currentDriverMode);
+  if(entry.hash && !currentDriverCanAccess()) return showNotice("Спочатку введи чинний пароль","warn");
+  const input = document.getElementById("driverPersonalPassword");
+  const password = input.value;
+  if(password.length < 4) return showNotice("Пароль має містити щонайменше 4 символи","warn");
+  const driverId = String(currentDriverMode);
+  unlockedDriverIds.add(driverId);
+  await set(ref(db,`settings/driverPasswords/${driverId}`),{
+    hash:await hashPersonalPassword(password),
+    updatedAt:Date.now()
+  });
+  input.value = "";
+  renderDriverAccess();
+  showNotice("Особистий пароль водія збережено","ok");
+}
+
+async function resetDriverPassword(driverId){
+  const name = driverNameById(driverId);
+  if(!confirm(`Скинути особистий пароль водія “${name}”?`)) return;
+  await remove(ref(db,`settings/driverPasswords/${driverId}`));
+  unlockedDriverIds.delete(String(driverId));
+  showNotice(`Пароль водія “${name}” скинуто`,"ok");
+}
+
+function listenDriverPasswords(){
+  onValue(ref(db,"settings/driverPasswords"), snap => {
+    const value = snap.val();
+    driverPasswords = value && typeof value === "object" ? value : {};
+    renderDriversEditor();
+    renderDriverAccess();
+  });
+}
+
 function setMode(mode){
   if(currentUserRole === "driver") mode = "driver";
   document.getElementById("dispatcherView").classList.toggle("hidden", mode !== "dispatcher");
@@ -942,10 +1079,11 @@ function setMode(mode){
   document.getElementById("dispatcherTab").classList.toggle("hidden", currentUserRole === "driver");
   document.getElementById("deliveriesTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
   document.getElementById("postponedTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
-  document.getElementById("workHoursTab").classList.toggle("hidden", currentUserRole === "driver");
+  document.getElementById("workHoursTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
   if(mode === "deliveries") renderDeliveryBoards();
   if(mode === "postponed") renderPostponedDeliveries();
   if(mode === "hours") renderHoursReport();
+  if(mode === "driver") renderDriverAccess();
 }
 
 document.getElementById("dispatcherTab").addEventListener("click", ()=>setMode("dispatcher"));
@@ -969,11 +1107,20 @@ function renderDriversEditor(){
   const wrap = document.getElementById("driversEditor");
   wrap.innerHTML = "";
   drivers.forEach((name, i)=>{
+    const row = document.createElement("div");
+    row.className = "driver-editor-row";
     const input = document.createElement("input");
     input.value = name;
     input.placeholder = `Водій ${i+1}`;
     input.dataset.index = i;
-    wrap.appendChild(input);
+    const resetButton = document.createElement("button");
+    resetButton.type = "button";
+    resetButton.className = driverPasswords[String(i)]?.hash ? "danger" : "secondary";
+    resetButton.textContent = driverPasswords[String(i)]?.hash ? "Скинути пароль" : "Пароля немає";
+    resetButton.disabled = !driverPasswords[String(i)]?.hash;
+    resetButton.onclick = () => resetDriverPassword(String(i));
+    row.append(input,resetButton);
+    wrap.appendChild(row);
   });
 }
 
@@ -1162,12 +1309,10 @@ function longWorkDate(dateKey){
 
 function setDriverFolder(folder){
   driverFolder = folder === "hours" ? "hours" : "routes";
-  document.getElementById("driverRoutesMain").classList.toggle("hidden", driverFolder !== "routes");
-  document.getElementById("driverHoursMain").classList.toggle("hidden", driverFolder !== "hours");
-  document.getElementById("driverRoutesSidebarPanel").classList.toggle("hidden", driverFolder !== "routes");
   document.getElementById("driverRoutesFolderBtn").className = driverFolder === "routes" ? "primary active" : "secondary";
   document.getElementById("driverHoursFolderBtn").className = driverFolder === "hours" ? "primary active" : "secondary";
-  if(driverFolder === "hours") renderDriverHours();
+  applyDriverAccessVisibility();
+  if(driverFolder === "hours" && currentDriverCanAccess()) renderDriverHours();
 }
 
 function renderDriverHours(){
@@ -1452,6 +1597,14 @@ function listenWorkHours(){
 
 document.getElementById("driverRoutesFolderBtn").addEventListener("click", () => setDriverFolder("routes"));
 document.getElementById("driverHoursFolderBtn").addEventListener("click", () => setDriverFolder("hours"));
+document.getElementById("driverUnlockBtn").addEventListener("click", unlockDriverFolder);
+document.getElementById("driverSetPasswordBtn").addEventListener("click", saveDriverPassword);
+document.getElementById("driverPersonalPassword").addEventListener("keydown", event => {
+  if(event.key !== "Enter") return;
+  const entry = driverPasswordEntry(currentDriverMode);
+  if(entry.hash && !currentDriverCanAccess()) unlockDriverFolder();
+  else saveDriverPassword();
+});
 document.getElementById("driverHoursDate").addEventListener("change", renderDriverHours);
 document.getElementById("driverStartWorkBtn").addEventListener("click", () => markDriverWorkTime("start"));
 document.getElementById("driverEndWorkBtn").addEventListener("click", () => markDriverWorkTime("end"));
@@ -2629,6 +2782,8 @@ function renderCurrentRoute(){
 document.getElementById("driverModeSelect").addEventListener("change", e=>{
   currentDriverMode = e.target.value;
   selectedDriverRouteId = "";
+  document.getElementById("driverPersonalPassword").value = "";
+  renderDriverAccess();
   renderDriverRouteList();
   renderDriverCurrentRoute();
   renderDriverVehicleBoard();
@@ -3235,6 +3390,7 @@ document.getElementById("saveDriverReportBtn").addEventListener("click", saveDri
 listenDrivers();
 listenVehicles();
 listenStarTtn();
+listenDriverPasswords();
 listenWorkHours();
 listenRoutes();
 renderDriversEditor();
