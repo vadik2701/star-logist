@@ -89,6 +89,39 @@ button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size
 .star-ttn-date-label{display:grid;gap:6px;font-weight:800;margin-bottom:10px}
 .star-ttn-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .star-ttn-date-badge{display:inline-block;background:#fee2e2;color:#991b1b;border-radius:999px;padding:7px 10px;font-size:13px;font-weight:900}
+.driver-folder-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.driver-folder-buttons button.active{outline:3px solid #bfdbfe;background:#1d4ed8;color:#fff}
+.hours-card{border:2px solid #bfdbfe;border-radius:16px;padding:16px;background:#eff6ff}
+.hours-card-title{font-size:20px;font-weight:900;color:#1e3a8a;margin-bottom:4px}
+.hours-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.hours-control{display:grid;gap:7px;padding:12px;border:1px solid #bfdbfe;border-radius:12px;background:#fff;font-weight:800}
+.hours-control button{width:100%}
+.hours-duration{margin-top:12px;padding:10px 12px;border-radius:12px;background:#dbeafe;color:#1e3a8a;font-size:18px;font-weight:900}
+.trip-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.trip-field{display:grid;gap:6px;padding:12px;border:1px solid #fdba74;border-radius:12px;background:#fff7ed;font-weight:800}
+.hours-history{display:grid;gap:8px;margin-top:12px}
+.hours-history-item{width:100%;display:grid;grid-template-columns:95px 1fr;gap:10px;text-align:left;background:#fff;color:#111827;border:1px solid #cbd5e1;box-shadow:none}
+.hours-history-item:hover{background:#eff6ff}
+.hours-history-date{font-weight:900;color:#1d4ed8}
+.hours-history-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.hours-report-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.hours-report-scroll{overflow:auto;border:1px solid #94a3b8;border-radius:12px;margin-top:14px;background:#fff}
+.hours-report-table{min-width:max(760px,100%);table-layout:auto}
+.hours-report-table th{position:sticky;top:0;z-index:2;min-width:150px;padding:10px;background:#e2e8f0;border:1px solid #94a3b8;text-align:left;font-size:14px}
+.hours-report-table th:first-child,.hours-report-table td:first-child{position:sticky;left:0;z-index:1;min-width:82px;width:82px;background:#f8fafc;font-weight:900}
+.hours-report-table th:first-child{z-index:3;background:#cbd5e1}
+.hours-report-table td{padding:0;border:1px solid #94a3b8;min-width:150px;height:72px}
+.hours-report-cell{display:block;width:100%;height:100%;min-height:72px;padding:8px;border:0;border-radius:0;resize:vertical;font-size:14px;line-height:1.3;background:#fff}
+.hours-report-cell:focus{outline:3px solid #3b82f6;outline-offset:-3px;background:#eff6ff}
+.hours-today td{background:#fefce8}
+.hours-today td:first-child{background:#fef08a}
+.print-hours-title{font-size:20px;font-weight:900;margin-bottom:8px}
+.print-hours-subtitle{font-size:13px;margin-bottom:10px;color:#334155}
+.print-hours-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.print-hours-table th,.print-hours-table td{border:1px solid #111;padding:5px 6px;vertical-align:top;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
+.print-hours-table th{background:#e2e8f0;font-weight:900}
+.print-hours-table th:first-child,.print-hours-table td:first-child{width:54px;font-weight:900}
+.print-hours-table td:first-child{white-space:nowrap}
 .empty{text-align:center;color:var(--muted);padding:24px;border:1px dashed #cbd5e1;border-radius:14px;background:#fff}
 table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed}
 td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;line-height:1.45}
@@ -227,15 +260,19 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   .delivery-cell{min-height:125px;font-size:11px}
   .delivery-sticky-panel{top:0;max-height:64vh;overflow-y:auto}
   .deliveries-nav{padding:11px 12px;font-size:13px}
+  .hours-controls,.hours-report-controls,.trip-grid{grid-template-columns:1fr}
+  .hours-history-item{grid-template-columns:76px 1fr}
 }
 
-.print-route{display:none}
+.print-route,.print-hours{display:none}
 @media print{
   @page{margin:12mm}
   body{background:#fff !important}
   body *{visibility:hidden !important}
-  #printRouteContent, #printRouteContent *{visibility:visible !important}
-  #printRouteContent{
+  body.print-route-mode #printRouteContent, body.print-route-mode #printRouteContent *,
+  body.print-hours-mode #printHoursContent, body.print-hours-mode #printHoursContent *{visibility:visible !important}
+  body.print-route-mode #printRouteContent,
+  body.print-hours-mode #printHoursContent{
     display:block !important;
     position:absolute;
     left:0;
@@ -272,6 +309,13 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
     -webkit-print-color-adjust:exact !important;
     print-color-adjust:exact !important;
   }
+  #printHoursContent, #printHoursContent *{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  #printHoursContent .print-hours-table{font-size:9px !important}
+  #printHoursContent .print-hours-table th,
+  #printHoursContent .print-hours-table td{padding:4px !important;line-height:1.2 !important}
   #printRouteContent .money-summary,
   #printRouteContent .phone-summary,
   #printRouteContent .status-summary,
@@ -358,6 +402,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
       </div>
       <div class="tabs">
         <button class="tab primary active" id="dispatcherTab">Диспетчер</button>
+        <button class="tab blue" id="workHoursTab">Звіт годин</button>
         <button class="tab postponed-nav" id="postponedTab">Перенесені доставки</button>
         <button class="tab secondary" id="driverTab">Водій</button>
         <button class="danger logout" id="logoutBtn">Вийти</button>
@@ -477,50 +522,144 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
             <div class="small" style="margin-top:8px">Водій бачить тільки свої маршрути.</div>
           </div>
           <div class="panel">
+            <h3 style="margin-top:0">Папки водія</h3>
+            <div class="driver-folder-buttons">
+              <button class="primary active" id="driverRoutesFolderBtn">Маршрути</button>
+              <button class="secondary" id="driverHoursFolderBtn">Години</button>
+            </div>
+          </div>
+          <div class="panel" id="driverRoutesSidebarPanel">
             <h3 style="margin-top:0">Маршрути водія</h3>
             <div id="driverRouteList" class="route-list"></div>
           </div>
         </div>
         <div class="main">
-          <div class="panel">
-            <h3 style="margin-top:0">СТАР ТТН · План виїздів</h3>
-            <div class="small" style="margin-bottom:10px">Вечірній список від диспетчера для всіх водіїв.</div>
-            <div id="driverVehicleBoard"></div>
-          </div>
-          <div class="panel">
-            <div class="meta-grid">
-              <div><b>Назва:</b> <span id="driverRouteName">—</span></div>
-              <div><b>Дата:</b> <span id="driverRouteDate">—</span></div>
-              <div><b>Водій:</b> <span id="driverRouteDriver">—</span></div>
-              <div><b>Машина:</b> <span id="driverRouteVehicle">—</span></div>
+          <div id="driverRoutesMain">
+            <div class="panel">
+              <h3 style="margin-top:0">СТАР ТТН · План виїздів</h3>
+              <div class="small" style="margin-bottom:10px">Вечірній список від диспетчера для всіх водіїв.</div>
+              <div id="driverVehicleBoard"></div>
             </div>
-          </div>
-          <div class="panel">
-            <h3 style="margin-top:0">Додати точку</h3>
-            <textarea id="driverNewPointText" placeholder="Встав текст нової точки"></textarea>
-            <div class="toolbar" style="margin-top:12px">
-              <button class="primary" id="driverAddPointBtn">Додати точку</button>
+            <div class="panel">
+              <div class="meta-grid">
+                <div><b>Назва:</b> <span id="driverRouteName">—</span></div>
+                <div><b>Дата:</b> <span id="driverRouteDate">—</span></div>
+                <div><b>Водій:</b> <span id="driverRouteDriver">—</span></div>
+                <div><b>Машина:</b> <span id="driverRouteVehicle">—</span></div>
+              </div>
             </div>
-            <div class="small" style="margin-top:8px">Точка додається в кінець вибраного маршруту зі статусом “Очікує”.</div>
-          </div>
-          <div id="driverRouteContent"></div>
-          <div id="driverReportPanel" class="panel hidden">
-            <h3 style="margin-top:0">Примітки та витрати водія</h3>
-            <div class="driver-report-form">
-              <label>
-                Примітки
-                <textarea id="driverRouteNotes" placeholder="Напиши примітки до маршруту"></textarea>
-              </label>
-              <label>
-                Витрати
-                <input id="driverRouteExpenses" placeholder="Наприклад: пальне 1200 грн, парковка 100 грн" />
-              </label>
-              <div class="toolbar">
-                <button class="primary" id="saveDriverReportBtn">Зберегти примітки та витрати</button>
+            <div class="panel">
+              <h3 style="margin-top:0">Додати точку</h3>
+              <textarea id="driverNewPointText" placeholder="Встав текст нової точки"></textarea>
+              <div class="toolbar" style="margin-top:12px">
+                <button class="primary" id="driverAddPointBtn">Додати точку</button>
+              </div>
+              <div class="small" style="margin-top:8px">Точка додається в кінець вибраного маршруту зі статусом “Очікує”.</div>
+            </div>
+            <div id="driverRouteContent"></div>
+            <div id="driverReportPanel" class="panel hidden">
+              <h3 style="margin-top:0">Примітки та витрати водія</h3>
+              <div class="driver-report-form">
+                <label>
+                  Примітки
+                  <textarea id="driverRouteNotes" placeholder="Напиши примітки до маршруту"></textarea>
+                </label>
+                <label>
+                  Витрати
+                  <input id="driverRouteExpenses" placeholder="Наприклад: пальне 1200 грн, парковка 100 грн" />
+                </label>
+                <div class="toolbar">
+                  <button class="primary" id="saveDriverReportBtn">Зберегти примітки та витрати</button>
+                </div>
               </div>
             </div>
           </div>
+          <div id="driverHoursMain" class="hidden">
+            <div class="panel">
+              <div class="hours-card-title">Мої робочі години</div>
+              <div class="small">Вибери день. Кнопки підставляють поточний час, але його можна виправити вручну.</div>
+              <label style="display:grid;gap:6px;font-weight:800;margin-top:14px;max-width:280px">
+                Дата
+                <input id="driverHoursDate" type="date" />
+              </label>
+              <div id="driverHoursCard" class="hours-card" style="margin-top:12px">
+                <div id="driverHoursPerson" class="hours-card-title">Спочатку вибери водія</div>
+                <div class="hours-controls">
+                  <label class="hours-control">
+                    Початок роботи
+                    <input id="driverHoursStart" type="time" />
+                    <button class="green" id="driverStartWorkBtn">Почав роботу зараз</button>
+                  </label>
+                  <label class="hours-control">
+                    Завершення роботи
+                    <input id="driverHoursEnd" type="time" />
+                    <button class="danger" id="driverEndWorkBtn">Завершив роботу зараз</button>
+                  </label>
+                </div>
+                <div id="driverHoursDuration" class="hours-duration">Тривалість: —</div>
+                <label style="display:grid;gap:6px;font-weight:800;margin-top:12px">
+                  Запис або примітка
+                  <textarea id="driverHoursNote" placeholder="Наприклад: у рейсі, вихідний, повернувся з рейсу"></textarea>
+                </label>
+                <div class="toolbar" style="margin-top:12px">
+                  <button class="primary" id="saveDriverHoursBtn">Зберегти години</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3 style="margin-top:0">Рейс на кілька днів</h3>
+              <div class="small">Вкажи, коли водій виїхав і коли повернувся. Проміжні дні автоматично позначаться “У рейсі”.</div>
+              <div class="trip-grid">
+                <label class="trip-field">
+                  Дата виїзду
+                  <input id="driverTripStartDate" type="date" />
+                </label>
+                <label class="trip-field">
+                  Час виїзду
+                  <input id="driverTripStartTime" type="time" />
+                </label>
+                <label class="trip-field">
+                  Дата повернення
+                  <input id="driverTripEndDate" type="date" />
+                </label>
+                <label class="trip-field">
+                  Час повернення
+                  <input id="driverTripEndTime" type="time" />
+                </label>
+              </div>
+              <div class="toolbar" style="margin-top:12px">
+                <button class="primary" id="saveDriverTripBtn">Зберегти рейс</button>
+                <button class="danger" id="deleteDriverTripBtn">Видалити цей рейс</button>
+              </div>
+            </div>
+            <div class="panel">
+              <h3 style="margin-top:0">Останні записи</h3>
+              <div class="small">Натисни на запис, щоб відкрити цей день і виправити його.</div>
+              <div id="driverHoursHistory" class="hours-history"></div>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <div id="workHoursView" class="hidden">
+      <div class="panel">
+        <h2 style="margin-top:0">Звіт робочих годин</h2>
+        <div class="small">Таблиця спільна для диспетчера і водіїв. Будь-яку клітинку можна дописати або виправити вручну.</div>
+        <div class="hours-report-controls" style="margin-top:14px">
+          <label style="display:grid;gap:6px;font-weight:800">
+            Друкувати з дати
+            <input id="hoursReportFrom" type="date" />
+          </label>
+          <label style="display:grid;gap:6px;font-weight:800">
+            По дату включно
+            <input id="hoursReportTo" type="date" />
+          </label>
+          <button class="secondary" id="currentWeekHoursBtn">Цей тиждень</button>
+          <button class="primary" id="saveHoursReportBtn">Зберегти таблицю</button>
+          <button class="blue" id="printHoursReportBtn">Друкувати звіт годин</button>
+        </div>
+        <div id="hoursReportTable" class="hours-report-scroll"></div>
       </div>
     </div>
 
@@ -569,6 +708,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
 </div>
 
 <div id="printRouteContent" class="print-route"></div>
+<div id="printHoursContent" class="print-hours"></div>
 
 <div id="pointEditModal" class="edit-modal hidden">
   <div class="edit-box">
@@ -674,6 +814,8 @@ let routes = {};
 let currentRouteId = "";
 let currentDriverMode = "";
 let selectedDriverRouteId = "";
+let driverFolder = "routes";
+let workHours = {};
 let showArchivedRoutes = false;
 let routeSearchTerm = "";
 let currentUserRole = localStorage.getItem(ROLE_KEY) || "";
@@ -726,6 +868,7 @@ const noticeBox = document.getElementById("noticeBox");
 function applyRole(){
   const isDriver = currentUserRole === "driver";
   document.getElementById("dispatcherTab").classList.toggle("hidden", isDriver);
+  document.getElementById("workHoursTab").classList.toggle("hidden", isDriver);
   document.getElementById("deliveriesTab").classList.toggle("hidden", isDriver);
   document.getElementById("postponedTab").classList.toggle("hidden", isDriver);
   if(isDriver) setMode("driver");
@@ -773,26 +916,42 @@ function showNotice(text, kind="ok"){
   window.__noticeTimer = setTimeout(()=>noticeBox.innerHTML="",3500);
 }
 
+function localDateKey(date = new Date()){
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2,"0");
+  const day = String(date.getDate()).padStart(2,"0");
+  return `${year}-${month}-${day}`;
+}
+
+function localTimeValue(date = new Date()){
+  return `${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
+}
+
 function setMode(mode){
   if(currentUserRole === "driver") mode = "driver";
   document.getElementById("dispatcherView").classList.toggle("hidden", mode !== "dispatcher");
   document.getElementById("driverView").classList.toggle("hidden", mode !== "driver");
   document.getElementById("deliveriesView").classList.toggle("hidden", mode !== "deliveries");
   document.getElementById("postponedView").classList.toggle("hidden", mode !== "postponed");
+  document.getElementById("workHoursView").classList.toggle("hidden", mode !== "hours");
   document.getElementById("dispatcherTab").className = mode === "dispatcher" ? "tab primary active" : "tab secondary";
   document.getElementById("deliveriesTab").className = mode === "deliveries" ? "tab danger deliveries-nav active" : "tab danger deliveries-nav";
   document.getElementById("postponedTab").className = mode === "postponed" ? "tab postponed-nav active" : "tab postponed-nav";
+  document.getElementById("workHoursTab").className = mode === "hours" ? "tab blue active" : "tab blue";
   document.getElementById("driverTab").className = mode === "driver" ? "tab primary active" : "tab secondary";
   document.getElementById("dispatcherTab").classList.toggle("hidden", currentUserRole === "driver");
   document.getElementById("deliveriesTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
   document.getElementById("postponedTab").classList.toggle("hidden", currentUserRole === "driver" || mode === "driver");
+  document.getElementById("workHoursTab").classList.toggle("hidden", currentUserRole === "driver");
   if(mode === "deliveries") renderDeliveryBoards();
   if(mode === "postponed") renderPostponedDeliveries();
+  if(mode === "hours") renderHoursReport();
 }
 
 document.getElementById("dispatcherTab").addEventListener("click", ()=>setMode("dispatcher"));
 document.getElementById("deliveriesTab").addEventListener("click", ()=>setMode("deliveries"));
 document.getElementById("postponedTab").addEventListener("click", ()=>setMode("postponed"));
+document.getElementById("workHoursTab").addEventListener("click", ()=>setMode("hours"));
 document.getElementById("driverTab").addEventListener("click", ()=>setMode("driver"));
 
 function badgeClass(status){
@@ -929,6 +1088,8 @@ function listenDrivers(){
     renderDriverRouteList();
     renderCurrentRoute();
     renderDriverVehicleBoard();
+    renderDriverHours();
+    renderHoursReport();
   });
 }
 
@@ -954,6 +1115,361 @@ function driverNameById(driverId){
 function routeVehicleLabel(route){
   return String(route?.vehicle || "").trim() || "—";
 }
+
+function workHourRecord(dateKey, driverId){
+  const day = workHours && typeof workHours === "object" ? workHours[dateKey] : null;
+  const record = day && typeof day === "object" ? day[String(driverId)] : null;
+  return record && typeof record === "object" ? record : {};
+}
+
+function workHourAutoText(record){
+  const start = String(record?.startTime || "").trim();
+  const end = String(record?.endTime || "").trim();
+  const note = String(record?.note || "").trim();
+  const tripText = String(record?.tripText || "").trim();
+  let range = "";
+  if(start && end) range = `${start}-${end}`;
+  else if(start) range = `${start} -`;
+  else if(end) range = `- ${end}`;
+  return [range, tripText, note].filter(Boolean).join("\n");
+}
+
+function workHourDisplayText(record){
+  if(record && Object.prototype.hasOwnProperty.call(record,"manualText")) return String(record.manualText ?? "");
+  return workHourAutoText(record);
+}
+
+function workDurationText(start, end){
+  if(!/^\d{2}:\d{2}$/.test(start || "") || !/^\d{2}:\d{2}$/.test(end || "")) return "—";
+  const [startHour,startMinute] = start.split(":").map(Number);
+  const [endHour,endMinute] = end.split(":").map(Number);
+  let minutes = endHour * 60 + endMinute - (startHour * 60 + startMinute);
+  if(minutes < 0) minutes += 24 * 60;
+  const hoursPart = Math.floor(minutes / 60);
+  const minutesPart = minutes % 60;
+  return `${hoursPart} год${minutesPart ? ` ${minutesPart} хв` : ""}`;
+}
+
+function shortWorkDate(dateKey){
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey || "");
+  return match ? `${match[3]}.${match[2]}` : dateKey;
+}
+
+function longWorkDate(dateKey){
+  const date = new Date(`${dateKey}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? dateKey : date.toLocaleDateString("uk-UA", {day:"2-digit",month:"long",year:"numeric"});
+}
+
+function setDriverFolder(folder){
+  driverFolder = folder === "hours" ? "hours" : "routes";
+  document.getElementById("driverRoutesMain").classList.toggle("hidden", driverFolder !== "routes");
+  document.getElementById("driverHoursMain").classList.toggle("hidden", driverFolder !== "hours");
+  document.getElementById("driverRoutesSidebarPanel").classList.toggle("hidden", driverFolder !== "routes");
+  document.getElementById("driverRoutesFolderBtn").className = driverFolder === "routes" ? "primary active" : "secondary";
+  document.getElementById("driverHoursFolderBtn").className = driverFolder === "hours" ? "primary active" : "secondary";
+  if(driverFolder === "hours") renderDriverHours();
+}
+
+function renderDriverHours(){
+  const dateInput = document.getElementById("driverHoursDate");
+  if(!dateInput.value) dateInput.value = localDateKey();
+  const dateKey = dateInput.value || localDateKey();
+  const hasDriver = currentDriverMode !== "";
+  const record = hasDriver ? workHourRecord(dateKey, currentDriverMode) : {};
+  document.getElementById("driverHoursPerson").textContent = hasDriver
+    ? `${driverNameById(currentDriverMode)} · ${longWorkDate(dateKey)}`
+    : "Спочатку вибери водія";
+  document.getElementById("driverHoursStart").value = String(record.startTime || "");
+  document.getElementById("driverHoursEnd").value = String(record.endTime || "");
+  document.getElementById("driverHoursNote").value = String(record.note || "");
+  document.getElementById("driverHoursDuration").textContent = `Тривалість: ${workDurationText(record.startTime, record.endTime)}`;
+  document.getElementById("driverTripStartDate").value = String(record.tripStartDate || dateKey);
+  document.getElementById("driverTripStartTime").value = String(record.tripStartTime || "");
+  document.getElementById("driverTripEndDate").value = String(record.tripEndDate || dateKey);
+  document.getElementById("driverTripEndTime").value = String(record.tripEndTime || "");
+  ["driverHoursStart","driverHoursEnd","driverHoursNote","driverStartWorkBtn","driverEndWorkBtn","saveDriverHoursBtn","driverTripStartDate","driverTripStartTime","driverTripEndDate","driverTripEndTime","saveDriverTripBtn"].forEach(id => {
+    document.getElementById(id).disabled = !hasDriver;
+  });
+  document.getElementById("deleteDriverTripBtn").disabled = !hasDriver || !record.tripId;
+  renderDriverHoursHistory();
+}
+
+function renderDriverHoursHistory(){
+  const wrap = document.getElementById("driverHoursHistory");
+  if(currentDriverMode === ""){
+    wrap.innerHTML = '<div class="empty">Спочатку вибери водія</div>';
+    return;
+  }
+  const entries = Object.keys(workHours || {})
+    .sort((a,b) => b.localeCompare(a))
+    .map(dateKey => ({dateKey, record:workHourRecord(dateKey,currentDriverMode)}))
+    .filter(item => workHourDisplayText(item.record) || item.record.startTime || item.record.endTime || item.record.note)
+    .slice(0,20);
+  if(!entries.length){
+    wrap.innerHTML = '<div class="empty">Записів годин ще немає</div>';
+    return;
+  }
+  wrap.innerHTML = "";
+  entries.forEach(({dateKey,record}) => {
+    const button = document.createElement("button");
+    button.className = "hours-history-item";
+    button.type = "button";
+    button.innerHTML = `<span class="hours-history-date">${escapeHtml(shortWorkDate(dateKey))}</span><span class="hours-history-text">${escapeHtml(workHourDisplayText(record) || "Без тексту")}</span>`;
+    button.onclick = () => {
+      document.getElementById("driverHoursDate").value = dateKey;
+      renderDriverHours();
+      document.getElementById("driverHoursCard").scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    wrap.appendChild(button);
+  });
+}
+
+async function saveDriverHours(showSavedNotice = true){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const dateKey = document.getElementById("driverHoursDate").value || localDateKey();
+  const startTime = document.getElementById("driverHoursStart").value;
+  const endTime = document.getElementById("driverHoursEnd").value;
+  const note = document.getElementById("driverHoursNote").value.trim();
+  await update(ref(db, `workHours/${dateKey}/${currentDriverMode}`), {
+    startTime: startTime || null,
+    endTime: endTime || null,
+    note: note || null,
+    updatedAt: Date.now(),
+    updatedBy: "driver"
+  });
+  if(showSavedNotice) showNotice("Робочі години збережено","ok");
+}
+
+async function markDriverWorkTime(kind){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const input = document.getElementById(kind === "start" ? "driverHoursStart" : "driverHoursEnd");
+  input.value = localTimeValue();
+  await saveDriverHours(false);
+  showNotice(kind === "start" ? `Початок роботи: ${input.value}` : `Завершення роботи: ${input.value}`,"ok");
+}
+
+function tripFieldUpdates(base, value){
+  const fields = ["tripId","tripText","tripStartDate","tripStartTime","tripEndDate","tripEndTime","tripUpdatedAt"];
+  const updates = {};
+  fields.forEach(field => { updates[`${base}/${field}`] = value?.[field] ?? null; });
+  return updates;
+}
+
+async function saveDriverTrip(){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const startDate = document.getElementById("driverTripStartDate").value;
+  const startTime = document.getElementById("driverTripStartTime").value;
+  const endDate = document.getElementById("driverTripEndDate").value;
+  const endTime = document.getElementById("driverTripEndTime").value;
+  if(!startDate || !startTime || !endDate || !endTime) return showNotice("Вкажи дати й час виїзду та повернення","warn");
+  const dates = rangeDateKeys(startDate,endDate);
+  if(!dates.length) return showNotice("Дата повернення не може бути раніше дати виїзду","warn");
+  if(dates.length > 60) return showNotice("Один рейс не може бути довшим за 60 днів","warn");
+  if(startDate === endDate && endTime < startTime) return showNotice("Час повернення не може бути раніше часу виїзду","warn");
+
+  const selectedDate = document.getElementById("driverHoursDate").value || startDate;
+  const selectedRecord = workHourRecord(selectedDate,currentDriverMode);
+  const startRecord = workHourRecord(startDate,currentDriverMode);
+  const tripId = selectedRecord.tripId || startRecord.tripId || `trip-${Date.now().toString(36)}`;
+  const updates = {};
+  Object.keys(workHours || {}).forEach(dateKey => {
+    const record = workHourRecord(dateKey,currentDriverMode);
+    if(record.tripId === tripId) Object.assign(updates,tripFieldUpdates(`${dateKey}/${currentDriverMode}`,null));
+  });
+  dates.forEach((dateKey,index) => {
+    let tripText = "У рейсі";
+    if(dates.length === 1) tripText = `Рейс ${startTime}-${endTime}`;
+    else if(index === 0) tripText = `Виїхав у рейс о ${startTime}`;
+    else if(index === dates.length - 1) tripText = `Повернувся з рейсу о ${endTime}`;
+    Object.assign(updates,tripFieldUpdates(`${dateKey}/${currentDriverMode}`,{
+      tripId,
+      tripText,
+      tripStartDate:startDate,
+      tripStartTime:startTime,
+      tripEndDate:endDate,
+      tripEndTime:endTime,
+      tripUpdatedAt:Date.now()
+    }));
+  });
+  document.getElementById("driverHoursDate").value = startDate;
+  await update(ref(db,"workHours"),updates);
+  renderDriverHours();
+  showNotice(`Рейс з ${shortWorkDate(startDate)} по ${shortWorkDate(endDate)} збережено`,"ok");
+}
+
+async function deleteDriverTrip(){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const selectedDate = document.getElementById("driverHoursDate").value || localDateKey();
+  const tripId = workHourRecord(selectedDate,currentDriverMode).tripId;
+  if(!tripId) return showNotice("На вибрану дату немає багатоденного рейсу","warn");
+  if(!confirm("Видалити цей запис рейсу з усіх його днів?")) return;
+  const updates = {};
+  Object.keys(workHours || {}).forEach(dateKey => {
+    const record = workHourRecord(dateKey,currentDriverMode);
+    if(record.tripId === tripId) Object.assign(updates,tripFieldUpdates(`${dateKey}/${currentDriverMode}`,null));
+  });
+  await update(ref(db,"workHours"),updates);
+  showNotice("Запис рейсу видалено","ok");
+}
+
+function currentWeekDateRange(date = new Date()){
+  const monday = new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const sunday = new Date(monday.getFullYear(),monday.getMonth(),monday.getDate() + 6);
+  return { from:localDateKey(monday), to:localDateKey(sunday) };
+}
+
+function ensureHoursReportRange(){
+  const fromInput = document.getElementById("hoursReportFrom");
+  const toInput = document.getElementById("hoursReportTo");
+  if(!fromInput.value || !toInput.value){
+    const range = currentWeekDateRange();
+    if(!fromInput.value) fromInput.value = range.from;
+    if(!toInput.value) toInput.value = range.to;
+  }
+  return { from:fromInput.value, to:toInput.value };
+}
+
+function rangeDateKeys(fromValue, toValue){
+  const validDate = /^\d{4}-\d{2}-\d{2}$/;
+  if(!validDate.test(fromValue || "") || !validDate.test(toValue || "")) return [];
+  const start = new Date(`${fromValue}T12:00:00`);
+  const end = new Date(`${toValue}T12:00:00`);
+  if(Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return [];
+  const dates = [];
+  const cursor = new Date(start);
+  while(cursor <= end && dates.length < 367){
+    dates.push(localDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
+function selectCurrentHoursWeek(){
+  const range = currentWeekDateRange();
+  document.getElementById("hoursReportFrom").value = range.from;
+  document.getElementById("hoursReportTo").value = range.to;
+  renderHoursReport();
+}
+
+function renderHoursReport(){
+  const wrap = document.getElementById("hoursReportTable");
+  const range = ensureHoursReportRange();
+  const dates = rangeDateKeys(range.from,range.to);
+  if(!dates.length || !drivers.length){
+    wrap.innerHTML = '<div class="empty">Перевір дати: початкова дата має бути не пізніше кінцевої.</div>';
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "hours-report-table";
+  const thead = document.createElement("thead");
+  thead.innerHTML = `<tr><th>Дата</th>${drivers.map(name => `<th>${escapeHtml(name)}</th>`).join("")}</tr>`;
+  const tbody = document.createElement("tbody");
+  dates.forEach(dateKey => {
+    const row = document.createElement("tr");
+    if(dateKey === localDateKey()) row.className = "hours-today";
+    const dateCell = document.createElement("td");
+    dateCell.textContent = shortWorkDate(dateKey);
+    row.appendChild(dateCell);
+    drivers.forEach((_name,driverId) => {
+      const record = workHourRecord(dateKey,String(driverId));
+      const autoText = workHourAutoText(record);
+      const displayText = workHourDisplayText(record);
+      const cell = document.createElement("td");
+      const textarea = document.createElement("textarea");
+      textarea.className = "hours-report-cell";
+      textarea.value = displayText;
+      textarea.placeholder = "Години або запис";
+      textarea.dataset.date = dateKey;
+      textarea.dataset.driver = String(driverId);
+      textarea.dataset.auto = autoText;
+      textarea.dataset.original = displayText;
+      cell.appendChild(textarea);
+      row.appendChild(cell);
+    });
+    tbody.appendChild(row);
+  });
+  table.append(thead,tbody);
+  wrap.innerHTML = "";
+  wrap.appendChild(table);
+}
+
+async function saveHoursReport(options = {}){
+  const cells = [...document.querySelectorAll("#hoursReportTable .hours-report-cell")];
+  const changes = {};
+  cells.forEach(cell => {
+    const value = cell.value.trim();
+    if(value === cell.dataset.original) return;
+    const base = `${cell.dataset.date}/${cell.dataset.driver}`;
+    changes[`${base}/manualText`] = value === cell.dataset.auto ? null : value;
+    changes[`${base}/updatedAt`] = Date.now();
+    changes[`${base}/updatedBy`] = "dispatcher";
+  });
+  if(Object.keys(changes).length){
+    await update(ref(db,"workHours"), changes);
+  }
+  if(!options.silent) showNotice(Object.keys(changes).length ? "Таблицю годин збережено" : "Змін у таблиці немає","ok");
+}
+
+function buildHoursPrintContent(){
+  const range = ensureHoursReportRange();
+  const fromTitle = new Date(`${range.from}T12:00:00`).toLocaleDateString("uk-UA");
+  const toTitle = new Date(`${range.to}T12:00:00`).toLocaleDateString("uk-UA");
+  const screenRows = [...document.querySelectorAll("#hoursReportTable tbody tr")].map(row => ({
+    date: row.cells[0]?.textContent || "",
+    values: [...row.querySelectorAll("textarea")].map(cell => cell.value.trim())
+  }));
+  const printedDriverIndexes = drivers
+    .map((_name,index) => index)
+    .filter(index => screenRows.some(row => Boolean(row.values[index])));
+  const rows = screenRows;
+  document.getElementById("printHoursContent").innerHTML = `
+    <div class="print-hours-title">Звіт робочих годин · ${escapeHtml(fromTitle)} — ${escapeHtml(toTitle)}</div>
+    <div class="print-hours-subtitle">STAR Logist</div>
+    <table class="print-hours-table">
+      <thead><tr><th>Дата</th>${printedDriverIndexes.map(index => `<th>${escapeHtml(drivers[index])}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map(row => `<tr><td>${escapeHtml(row.date)}</td>${printedDriverIndexes.map(index => `<td>${escapeHtml(row.values[index] || "")}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>`;
+}
+
+async function printHoursReport(){
+  await saveHoursReport({silent:true});
+  buildHoursPrintContent();
+  document.body.classList.remove("print-route-mode");
+  document.body.classList.add("print-hours-mode");
+  window.addEventListener("afterprint", () => document.body.classList.remove("print-hours-mode"), {once:true});
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+
+function listenWorkHours(){
+  onValue(ref(db,"workHours"), snap => {
+    const value = snap.val();
+    workHours = value && typeof value === "object" ? value : {};
+    renderDriverHours();
+    renderHoursReport();
+  });
+}
+
+document.getElementById("driverRoutesFolderBtn").addEventListener("click", () => setDriverFolder("routes"));
+document.getElementById("driverHoursFolderBtn").addEventListener("click", () => setDriverFolder("hours"));
+document.getElementById("driverHoursDate").addEventListener("change", renderDriverHours);
+document.getElementById("driverStartWorkBtn").addEventListener("click", () => markDriverWorkTime("start"));
+document.getElementById("driverEndWorkBtn").addEventListener("click", () => markDriverWorkTime("end"));
+document.getElementById("saveDriverHoursBtn").addEventListener("click", () => saveDriverHours());
+document.getElementById("saveDriverTripBtn").addEventListener("click", saveDriverTrip);
+document.getElementById("deleteDriverTripBtn").addEventListener("click", deleteDriverTrip);
+["driverHoursStart","driverHoursEnd"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => {
+    const start = document.getElementById("driverHoursStart").value;
+    const end = document.getElementById("driverHoursEnd").value;
+    document.getElementById("driverHoursDuration").textContent = `Тривалість: ${workDurationText(start,end)}`;
+  });
+});
+document.getElementById("hoursReportFrom").addEventListener("change", renderHoursReport);
+document.getElementById("hoursReportTo").addEventListener("change", renderHoursReport);
+document.getElementById("currentWeekHoursBtn").addEventListener("click", selectCurrentHoursWeek);
+document.getElementById("saveHoursReportBtn").addEventListener("click", () => saveHoursReport());
+document.getElementById("printHoursReportBtn").addEventListener("click", printHoursReport);
 
 function renderDriverVehicleBoard(){
   const wrap = document.getElementById("driverVehicleBoard");
@@ -1829,6 +2345,9 @@ function renderPrintRoute(routeId){
 function printCurrentRoute(){
   if(!currentRouteId) return showNotice("Спочатку відкрий маршрут","warn");
   if(!renderPrintRoute(currentRouteId)) return showNotice("Немає даних для друку","warn");
+  document.body.classList.remove("print-hours-mode");
+  document.body.classList.add("print-route-mode");
+  window.addEventListener("afterprint", () => document.body.classList.remove("print-route-mode"), {once:true});
   requestAnimationFrame(() => {
     requestAnimationFrame(() => window.print());
   });
@@ -2113,6 +2632,7 @@ document.getElementById("driverModeSelect").addEventListener("change", e=>{
   renderDriverRouteList();
   renderDriverCurrentRoute();
   renderDriverVehicleBoard();
+  renderDriverHours();
 });
 
 function renderDriverRouteList(){
@@ -2715,6 +3235,7 @@ document.getElementById("saveDriverReportBtn").addEventListener("click", saveDri
 listenDrivers();
 listenVehicles();
 listenStarTtn();
+listenWorkHours();
 listenRoutes();
 renderDriversEditor();
 renderDriverSelects();
@@ -2726,6 +3247,9 @@ renderCurrentRoute();
 renderDriverRouteList();
 renderDriverCurrentRoute();
 renderDriverVehicleBoard();
+setDriverFolder("routes");
+renderDriverHours();
+renderHoursReport();
 renderDeliveryBoards();
 </script>
 </body>
