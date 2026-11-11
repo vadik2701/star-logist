@@ -620,7 +620,7 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
                   <textarea id="driverHoursNote" placeholder="Наприклад: у рейсі, вихідний, повернувся з рейсу"></textarea>
                 </label>
                 <div class="toolbar" style="margin-top:12px">
-                  <button class="primary" id="saveDriverHoursBtn">Зберегти години</button>
+                  <button type="button" class="primary" id="saveDriverHoursBtn">Зберегти години</button>
                 </div>
               </div>
             </div>
@@ -1375,14 +1375,38 @@ async function saveDriverHours(showSavedNotice = true){
   const startTime = document.getElementById("driverHoursStart").value;
   const endTime = document.getElementById("driverHoursEnd").value;
   const note = document.getElementById("driverHoursNote").value.trim();
+  if(!startTime && !endTime && !note) return showNotice("Вкажи початок, завершення або напиши запис","warn");
   await update(ref(db, `workHours/${dateKey}/${currentDriverMode}`), {
     startTime: startTime || null,
     endTime: endTime || null,
     note: note || null,
+    manualText: null,
     updatedAt: Date.now(),
     updatedBy: "driver"
   });
-  if(showSavedNotice) showNotice("Робочі години збережено","ok");
+  const currentDay = workHours[dateKey] && typeof workHours[dateKey] === "object" ? workHours[dateKey] : {};
+  const previous = currentDay[String(currentDriverMode)] && typeof currentDay[String(currentDriverMode)] === "object" ? currentDay[String(currentDriverMode)] : {};
+  workHours = {
+    ...workHours,
+    [dateKey]: {
+      ...currentDay,
+      [String(currentDriverMode)]: {
+        ...previous,
+        startTime:startTime || "",
+        endTime:endTime || "",
+        note,
+        updatedAt:Date.now(),
+        updatedBy:"driver"
+      }
+    }
+  };
+  delete workHours[dateKey][String(currentDriverMode)].manualText;
+  renderDriverHours();
+  renderHoursReport();
+  if(showSavedNotice){
+    const savedText = workHourAutoText(workHourRecord(dateKey,currentDriverMode)) || "запис збережено";
+    showNotice(`${shortWorkDate(dateKey)}: ${savedText.replace(/\n/g," · ")}`,"ok");
+  }
 }
 
 async function markDriverWorkTime(kind){
@@ -1608,7 +1632,11 @@ document.getElementById("driverPersonalPassword").addEventListener("keydown", ev
 document.getElementById("driverHoursDate").addEventListener("change", renderDriverHours);
 document.getElementById("driverStartWorkBtn").addEventListener("click", () => markDriverWorkTime("start"));
 document.getElementById("driverEndWorkBtn").addEventListener("click", () => markDriverWorkTime("end"));
-document.getElementById("saveDriverHoursBtn").addEventListener("click", () => saveDriverHours());
+document.getElementById("saveDriverHoursBtn").addEventListener("click", async () => {
+  if(document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  await new Promise(resolve => setTimeout(resolve,0));
+  await saveDriverHours();
+});
 document.getElementById("saveDriverTripBtn").addEventListener("click", saveDriverTrip);
 document.getElementById("deleteDriverTripBtn").addEventListener("click", deleteDriverTrip);
 ["driverHoursStart","driverHoursEnd"].forEach(id => {
