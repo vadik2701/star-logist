@@ -105,10 +105,13 @@ button{border:none;border-radius:14px;padding:12px 18px;cursor:pointer;font-size
 .trip-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
 .trip-field{display:grid;gap:6px;padding:12px;border:1px solid #fdba74;border-radius:12px;background:#fff7ed;font-weight:800}
 .hours-history{display:grid;gap:8px;margin-top:12px}
+.hours-history-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
 .hours-history-item{width:100%;display:grid;grid-template-columns:95px 1fr;gap:10px;text-align:left;background:#fff;color:#111827;border:1px solid #cbd5e1;box-shadow:none}
 .hours-history-item:hover{background:#eff6ff}
 .hours-history-date{font-weight:900;color:#1d4ed8}
 .hours-history-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.hours-history-actions{display:grid;grid-template-columns:1fr;gap:6px}
+.hours-history-actions button{padding:8px 10px;font-size:12px;min-width:92px}
 .hours-report-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
 .hours-report-scroll{overflow:auto;border:1px solid #94a3b8;border-radius:12px;margin-top:14px;background:#fff}
 .hours-report-table{min-width:max(760px,100%);table-layout:auto}
@@ -267,6 +270,8 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
   .deliveries-nav{padding:11px 12px;font-size:13px}
   .hours-controls,.hours-report-controls,.trip-grid{grid-template-columns:1fr}
   .hours-history-item{grid-template-columns:76px 1fr}
+  .hours-history-row{grid-template-columns:1fr}
+  .hours-history-actions{grid-template-columns:1fr 1fr}
 }
 
 .print-route,.print-hours{display:none}
@@ -646,9 +651,10 @@ td{border:1px solid #bfbfbf;vertical-align:top;padding:10px 14px;font-size:16px;
                 </label>
               </div>
               <div class="toolbar" style="margin-top:12px">
-                <button class="primary" id="saveDriverTripBtn">Зберегти рейс</button>
-                <button class="danger" id="deleteDriverTripBtn">Видалити цей рейс</button>
+                <button type="button" class="primary" id="saveDriverTripBtn">Зберегти рейс</button>
+                <button type="button" class="danger" id="deleteDriverTripBtn">Видалити цей рейс</button>
               </div>
+              <div id="driverTripStatus" class="small" style="margin-top:10px">Заповни чотири поля та натисни “Зберегти рейс”.</div>
             </div>
             <div class="panel">
               <h3 style="margin-top:0">Останні записи</h3>
@@ -1356,17 +1362,55 @@ function renderDriverHoursHistory(){
   }
   wrap.innerHTML = "";
   entries.forEach(({dateKey,record}) => {
+    const row = document.createElement("div");
+    row.className = "hours-history-row";
     const button = document.createElement("button");
     button.className = "hours-history-item";
     button.type = "button";
     button.innerHTML = `<span class="hours-history-date">${escapeHtml(shortWorkDate(dateKey))}</span><span class="hours-history-text">${escapeHtml(workHourDisplayText(record) || "Без тексту")}</span>`;
-    button.onclick = () => {
-      document.getElementById("driverHoursDate").value = dateKey;
-      renderDriverHours();
-      document.getElementById("driverHoursCard").scrollIntoView({behavior:"smooth",block:"start"});
-    };
-    wrap.appendChild(button);
+    button.onclick = () => editDriverHours(dateKey);
+    const actions = document.createElement("div");
+    actions.className = "hours-history-actions";
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "blue";
+    editButton.textContent = "Редагувати";
+    editButton.onclick = () => editDriverHours(dateKey);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "danger";
+    deleteButton.textContent = "Видалити";
+    const hasDailyRecord = record.startTime || record.endTime || record.note || Object.prototype.hasOwnProperty.call(record,"manualText");
+    deleteButton.disabled = !hasDailyRecord && !record.tripId;
+    deleteButton.onclick = () => hasDailyRecord ? deleteDriverHours(dateKey) : deleteDriverTripById(record.tripId);
+    actions.append(editButton,deleteButton);
+    row.append(button,actions);
+    wrap.appendChild(row);
   });
+}
+
+function editDriverHours(dateKey){
+  document.getElementById("driverHoursDate").value = dateKey;
+  renderDriverHours();
+  document.getElementById("driverHoursCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+async function deleteDriverHours(dateKey){
+  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  const record = workHourRecord(dateKey,currentDriverMode);
+  const hasDailyRecord = record.startTime || record.endTime || record.note || Object.prototype.hasOwnProperty.call(record,"manualText");
+  if(!hasDailyRecord) return showNotice("На цей день немає звичайного запису годин","warn");
+  if(!confirm(`Видалити години за ${shortWorkDate(dateKey)}? Багатоденний рейс, якщо він є, залишиться.`)) return;
+  await update(ref(db,`workHours/${dateKey}/${currentDriverMode}`),{
+    startTime:null,
+    endTime:null,
+    note:null,
+    manualText:null,
+    updatedAt:null,
+    updatedBy:null
+  });
+  if(document.getElementById("driverHoursDate").value === dateKey) renderDriverHours();
+  showNotice(`Години за ${shortWorkDate(dateKey)} видалено`,"ok");
 }
 
 async function saveDriverHours(showSavedNotice = true){
@@ -1417,40 +1461,48 @@ async function markDriverWorkTime(kind){
   showNotice(kind === "start" ? `Початок роботи: ${input.value}` : `Завершення роботи: ${input.value}`,"ok");
 }
 
-function tripFieldUpdates(base, value){
+function tripFieldPayload(value){
   const fields = ["tripId","tripText","tripStartDate","tripStartTime","tripEndDate","tripEndTime","tripUpdatedAt"];
-  const updates = {};
-  fields.forEach(field => { updates[`${base}/${field}`] = value?.[field] ?? null; });
-  return updates;
+  const payload = {};
+  fields.forEach(field => { payload[field] = value?.[field] ?? null; });
+  return payload;
+}
+
+function showDriverTripStatus(text,kind="warn"){
+  const status = document.getElementById("driverTripStatus");
+  status.className = `notice ${kind}`;
+  status.textContent = text;
+  showNotice(text,kind);
 }
 
 async function saveDriverTrip(){
-  if(currentDriverMode === "") return showNotice("Спочатку вибери водія","warn");
+  if(currentDriverMode === "") return showDriverTripStatus("Спочатку вибери водія","warn");
   const startDate = document.getElementById("driverTripStartDate").value;
   const startTime = document.getElementById("driverTripStartTime").value;
   const endDate = document.getElementById("driverTripEndDate").value;
   const endTime = document.getElementById("driverTripEndTime").value;
-  if(!startDate || !startTime || !endDate || !endTime) return showNotice("Вкажи дати й час виїзду та повернення","warn");
+  if(!startDate || !startTime || !endDate || !endTime) return showDriverTripStatus("Вкажи дату і час виїзду та дату і час повернення","warn");
   const dates = rangeDateKeys(startDate,endDate);
-  if(!dates.length) return showNotice("Дата повернення не може бути раніше дати виїзду","warn");
-  if(dates.length > 60) return showNotice("Один рейс не може бути довшим за 60 днів","warn");
-  if(startDate === endDate && endTime < startTime) return showNotice("Час повернення не може бути раніше часу виїзду","warn");
+  if(!dates.length) return showDriverTripStatus("Дата повернення не може бути раніше дати виїзду","warn");
+  if(dates.length > 60) return showDriverTripStatus("Один рейс не може бути довшим за 60 днів","warn");
+  if(startDate === endDate && endTime < startTime) return showDriverTripStatus("Час повернення не може бути раніше часу виїзду","warn");
 
   const selectedDate = document.getElementById("driverHoursDate").value || startDate;
   const selectedRecord = workHourRecord(selectedDate,currentDriverMode);
   const startRecord = workHourRecord(startDate,currentDriverMode);
   const tripId = selectedRecord.tripId || startRecord.tripId || `trip-${Date.now().toString(36)}`;
-  const updates = {};
+  const oldDates = [];
   Object.keys(workHours || {}).forEach(dateKey => {
     const record = workHourRecord(dateKey,currentDriverMode);
-    if(record.tripId === tripId) Object.assign(updates,tripFieldUpdates(`${dateKey}/${currentDriverMode}`,null));
+    if(record.tripId === tripId) oldDates.push(dateKey);
   });
+  const payloadByDate = {};
   dates.forEach((dateKey,index) => {
     let tripText = "У рейсі";
     if(dates.length === 1) tripText = `Рейс ${startTime}-${endTime}`;
     else if(index === 0) tripText = `Виїхав у рейс о ${startTime}`;
     else if(index === dates.length - 1) tripText = `Повернувся з рейсу о ${endTime}`;
-    Object.assign(updates,tripFieldUpdates(`${dateKey}/${currentDriverMode}`,{
+    payloadByDate[dateKey] = tripFieldPayload({
       tripId,
       tripText,
       tripStartDate:startDate,
@@ -1458,12 +1510,27 @@ async function saveDriverTrip(){
       tripEndDate:endDate,
       tripEndTime:endTime,
       tripUpdatedAt:Date.now()
-    }));
+    });
   });
   document.getElementById("driverHoursDate").value = startDate;
-  await update(ref(db,"workHours"),updates);
-  renderDriverHours();
-  showNotice(`Рейс з ${shortWorkDate(startDate)} по ${shortWorkDate(endDate)} збережено`,"ok");
+  const saveButton = document.getElementById("saveDriverTripBtn");
+  saveButton.disabled = true;
+  saveButton.textContent = "Зберігаю...";
+  try{
+    const affectedDates = [...new Set([...oldDates,...dates])];
+    await Promise.all(affectedDates.map(dateKey => update(
+      ref(db,`workHours/${dateKey}/${currentDriverMode}`),
+      payloadByDate[dateKey] || tripFieldPayload(null)
+    )));
+    renderDriverHours();
+    showDriverTripStatus(`Рейс з ${shortWorkDate(startDate)} ${startTime} по ${shortWorkDate(endDate)} ${endTime} збережено`,"ok");
+  }catch(error){
+    console.error(error);
+    showDriverTripStatus("Не вдалося зберегти рейс. Перевір інтернет і спробуй ще раз.","err");
+  }finally{
+    saveButton.disabled = false;
+    saveButton.textContent = "Зберегти рейс";
+  }
 }
 
 async function deleteDriverTrip(){
@@ -1471,14 +1538,19 @@ async function deleteDriverTrip(){
   const selectedDate = document.getElementById("driverHoursDate").value || localDateKey();
   const tripId = workHourRecord(selectedDate,currentDriverMode).tripId;
   if(!tripId) return showNotice("На вибрану дату немає багатоденного рейсу","warn");
+  await deleteDriverTripById(tripId);
+}
+
+async function deleteDriverTripById(tripId){
+  if(!tripId || currentDriverMode === "") return showNotice("Рейс не знайдено","warn");
   if(!confirm("Видалити цей запис рейсу з усіх його днів?")) return;
-  const updates = {};
+  const dates = [];
   Object.keys(workHours || {}).forEach(dateKey => {
     const record = workHourRecord(dateKey,currentDriverMode);
-    if(record.tripId === tripId) Object.assign(updates,tripFieldUpdates(`${dateKey}/${currentDriverMode}`,null));
+    if(record.tripId === tripId) dates.push(dateKey);
   });
-  await update(ref(db,"workHours"),updates);
-  showNotice("Запис рейсу видалено","ok");
+  await Promise.all(dates.map(dateKey => update(ref(db,`workHours/${dateKey}/${currentDriverMode}`),tripFieldPayload(null))));
+  showDriverTripStatus("Запис рейсу видалено","ok");
 }
 
 function currentWeekDateRange(date = new Date()){
@@ -1637,7 +1709,11 @@ document.getElementById("saveDriverHoursBtn").addEventListener("click", async ()
   await new Promise(resolve => setTimeout(resolve,0));
   await saveDriverHours();
 });
-document.getElementById("saveDriverTripBtn").addEventListener("click", saveDriverTrip);
+document.getElementById("saveDriverTripBtn").addEventListener("click", async () => {
+  if(document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  await new Promise(resolve => setTimeout(resolve,0));
+  await saveDriverTrip();
+});
 document.getElementById("deleteDriverTripBtn").addEventListener("click", deleteDriverTrip);
 ["driverHoursStart","driverHoursEnd"].forEach(id => {
   document.getElementById(id).addEventListener("input", () => {
